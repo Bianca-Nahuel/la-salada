@@ -122,6 +122,7 @@ namespace Salada.EditorTools
             so.Update();
             EditorGUILayout.PropertyField(so.FindProperty("characterName"));
             EditorGUILayout.PropertyField(so.FindProperty("color"));
+            EditorGUILayout.PropertyField(so.FindProperty("sprite"));
             if (so.ApplyModifiedProperties()) EditorUtility.SetDirty(ch);
         }
 

@@ -15,7 +15,7 @@ namespace Salada.UI
 
         void Start()
         {
-            _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _font = UIFont.Get();
             Build();
             _root.SetActive(false);
         }
@@ -48,7 +48,7 @@ namespace Salada.UI
 
         public void Show(string message)
         {
-            if (_root == null) { _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); Build(); }
+            if (_root == null) { _font = UIFont.Get(); Build(); }
             _msg.text = message;
             _root.SetActive(true);
         }

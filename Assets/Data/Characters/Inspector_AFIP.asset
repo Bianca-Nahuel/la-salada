@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.EventCharacter
   characterName: Inspector AFIP
   color: {r: 0.6, g: 0.65, b: 0.7, a: 1}
+  sprite: {fileID: 21300000, guid: 950865b20876f564495eab5f4dffd08a, type: 3}

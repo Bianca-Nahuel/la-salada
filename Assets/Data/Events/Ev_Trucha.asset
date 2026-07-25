@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.GameEvent
   id: ev_trucha
   title: Mercaderia trucha
-  speaker: {fileID: 11400000, guid: 480cd0a6b5cdac24c8e66383796bd68a, type: 2}
+  speaker: {fileID: 11400000, guid: ebb13c032a1ec9f45a1f737e7c4eb783, type: 2}
   description: Hubo un aumento en los costos, pero un proveedor ofrece productos
     (mas) truchos a mitad de precio.
   mandatory: 0

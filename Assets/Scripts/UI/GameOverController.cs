@@ -18,7 +18,7 @@ namespace Salada.UI
         void EnsureBuilt()
         {
             if (_root != null) return;
-            _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _font = UIFont.Get();
 
             var canvasGo = new GameObject("GameOverCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             canvasGo.transform.SetParent(transform, false);

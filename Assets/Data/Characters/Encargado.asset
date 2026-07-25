@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.EventCharacter
   characterName: Encargado
   color: {r: 0.4, g: 0.8, b: 0.5, a: 1}
+  sprite: {fileID: 21300000, guid: 96fd67826cfadb643b7d33b7266bd821, type: 3}

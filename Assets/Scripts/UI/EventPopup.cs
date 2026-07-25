@@ -18,6 +18,9 @@ namespace Salada.UI
         private Transform _content;
         private Font _font;
 
+        private GameObject _portrait;
+        private Image _portraitImage;
+
         private GameEvent _ev;
         private Action<int> _onOption;
         private Action _onClose;
@@ -35,7 +38,7 @@ namespace Salada.UI
 
         void Start()
         {
-            _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _font = UIFont.Get();
             Build();
             _root.SetActive(false);
         }
@@ -62,6 +65,20 @@ namespace Salada.UI
             vlg.childControlWidth = true; vlg.childForceExpandWidth = true; vlg.childControlHeight = true; vlg.childForceExpandHeight = false;
             panel.GetComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             _content = panel.transform;
+
+            // Retrato del personaje: grande, a la derecha del panel, apenas superpuesto con el
+            // borde (ignora la VerticalLayoutGroup para no ocupar lugar ni tapar el contenido).
+            var portraitGo = new GameObject("Portrait", typeof(RectTransform), typeof(Image));
+            portraitGo.transform.SetParent(panel.transform, false);
+            portraitGo.AddComponent<LayoutElement>().ignoreLayout = true;
+            var port = portraitGo.GetComponent<RectTransform>();
+            port.anchorMin = new Vector2(1f, 0.5f); port.anchorMax = new Vector2(1f, 0.5f); port.pivot = new Vector2(0f, 0.5f);
+            port.sizeDelta = new Vector2(400, 607);
+            port.anchoredPosition = new Vector2(-20, -144);
+            _portraitImage = portraitGo.GetComponent<Image>();
+            _portraitImage.preserveAspect = true;
+            _portrait = portraitGo;
+            _portrait.SetActive(false);
         }
 
         static void Stretch(RectTransform rt)
@@ -72,8 +89,16 @@ namespace Salada.UI
         public void Show(GameEvent ev, Action<int> onOption, Action onClose)
         {
             _ev = ev; _onOption = onOption; _onClose = onClose;
+            SetPortrait(_ev.speaker);
             BuildDescription();
             _root.SetActive(true);
+        }
+
+        void SetPortrait(EventCharacter ch)
+        {
+            var sprite = ch != null ? ch.sprite : null;
+            _portrait.SetActive(sprite != null);
+            _portraitImage.sprite = sprite;
         }
 
         void BuildDescription()
@@ -98,6 +123,8 @@ namespace Salada.UI
 #endif
                     AddButton(label, new Color(0.2f, 0.5f, 0.65f), () => ChooseOption(idx), allowed);
                 }
+
+            _portrait.transform.SetAsLastSibling(); // por encima del contenido en la zona de solape
         }
 
         int TotalMoney(EventOption o) =>
@@ -149,6 +176,8 @@ namespace Salada.UI
                     _onClose?.Invoke();
                 });
             }
+
+            _portrait.transform.SetAsLastSibling();
         }
 
         // ---- helpers ----
@@ -158,6 +187,7 @@ namespace Salada.UI
             for (int i = _content.childCount - 1; i >= 0; i--)
             {
                 var c = _content.GetChild(i).gameObject;
+                if (c == _portrait) continue; // persistente: no se recrea en cada pantalla
                 c.SetActive(false);
                 Destroy(c);
             }

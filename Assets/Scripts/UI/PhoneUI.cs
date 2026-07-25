@@ -9,10 +9,10 @@ using Salada.Game;
 namespace Salada.UI
 {
     /// <summary>
-    /// "Celular" del jugador. Tiene un encabezado fijo (plata, dia y reloj de la jornada) y un
+    /// "Celular" del jugador. Encabezado fijo arriba (plata, dia y reloj de la jornada) y un
     /// boton fijo abajo que combina empezar oleada / cambiar velocidad / avanzar de dia. En el
-    /// medio, apps: Estadisticas (balanzas como cuadrados) y Construir/Demoler. Panel izquierdo
-    /// retractil. Todo se arma en runtime.
+    /// medio, un solo panel: fila de compra/demolicion de puestos (botones cuadrados chicos)
+    /// seguida de las balanzas y la economia. Panel izquierdo retractil. Todo se arma en runtime.
     /// </summary>
     public class PhoneUI : MonoBehaviour
     {
@@ -45,8 +45,8 @@ namespace Salada.UI
         private int _speedIdx;
         private bool _prevBuilding = true;
 
-        // pantallas
-        private GameObject _home, _statsScreen, _buildScreen;
+        // panel principal (construir + estadisticas)
+        private GameObject _main;
 
         // stats
         private class Gauge { public RectTransform fill; public Text value; public Func<float> getter; public float maxH; }
@@ -63,9 +63,8 @@ namespace Salada.UI
             if (waves == null) waves = FindAnyObjectByType<WaveManager>();
             _meters = FindAnyObjectByType<BusinessMeters>();
             _effects = FindAnyObjectByType<GameEffects>();
-            _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _font = UIFont.Get();
             BuildPhone();
-            ShowScreen(_home);
         }
 
         void BuildPhone()
@@ -79,9 +78,7 @@ namespace Salada.UI
             gameObject.AddComponent<Image>().color = new Color(0.09f, 0.10f, 0.13f, 0.99f);
 
             BuildHeader();
-            BuildHome();
-            BuildStats();
-            BuildBuild();
+            BuildMain();
             BuildFooter();
             BuildTab();
             if (Application.isEditor) BuildDebugButton();
@@ -105,59 +102,65 @@ namespace Salada.UI
             vlg.childControlWidth = true; vlg.childForceExpandWidth = true;
             vlg.childControlHeight = true; vlg.childForceExpandHeight = false;
 
-            _moneyText = MakeLabel(go.transform, "$0", 30, new Color(1f, 0.86f, 0.35f), FontStyle.Bold, 38);
+            _moneyText = MakeLabel(go.transform, "$0", 22, new Color(1f, 0.86f, 0.35f), FontStyle.Bold, 28);
             _moneyText.alignment = TextAnchor.MiddleLeft;
-            _clockText = MakeLabel(go.transform, "", 20, new Color(0.82f, 0.88f, 0.96f), FontStyle.Normal, 26);
+            _clockText = MakeLabel(go.transform, "", 13, new Color(0.82f, 0.88f, 0.96f), FontStyle.Normal, 18);
             _clockText.alignment = TextAnchor.MiddleLeft;
+            _clockText.horizontalOverflow = HorizontalWrapMode.Overflow;
         }
 
-        // ---- pantallas ----
+        // ---- panel principal (construir + estadisticas, sin pestañas) ----
 
-        GameObject MakeScreen(string name)
+        void BuildMain()
         {
-            var go = new GameObject(name, typeof(RectTransform), typeof(VerticalLayoutGroup));
-            go.transform.SetParent(transform, false);
-            var rt = go.GetComponent<RectTransform>();
-            // insertada entre el encabezado (arriba) y el boton de accion (abajo)
+            _main = new GameObject("Main", typeof(RectTransform), typeof(VerticalLayoutGroup));
+            _main.transform.SetParent(transform, false);
+            var rt = _main.GetComponent<RectTransform>();
+            // insertado entre el encabezado (arriba) y el boton de accion (abajo)
             rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
             rt.offsetMin = new Vector2(0, FooterH); rt.offsetMax = new Vector2(0, -HeaderH);
-            var vlg = go.GetComponent<VerticalLayoutGroup>();
-            vlg.padding = new RectOffset(14, 14, 12, 12);
-            vlg.spacing = 8;
+            var vlg = _main.GetComponent<VerticalLayoutGroup>();
+            vlg.padding = new RectOffset(10, 10, 8, 8);
+            vlg.spacing = 6;
             vlg.childAlignment = TextAnchor.UpperCenter;
             vlg.childControlWidth = true; vlg.childForceExpandWidth = true;
             vlg.childControlHeight = true; vlg.childForceExpandHeight = false;
-            go.SetActive(false);
-            return go;
+
+            BuildBuildRow(_main.transform);
+            BuildStatsSection(_main.transform);
         }
 
-        void ShowScreen(GameObject s)
+        void BuildBuildRow(Transform parent)
         {
-            _home.SetActive(s == _home);
-            _statsScreen.SetActive(s == _statsScreen);
-            _buildScreen.SetActive(s == _buildScreen);
-        }
-
-        void BuildHome()
-        {
-            _home = MakeScreen("Home");
-            MakeLabel(_home.transform, "MI NEGOCIO", 26, new Color(0.9f, 0.95f, 1f), FontStyle.Bold, 40);
-            MakeButton(_home.transform, "Estadisticas", new Color(0.25f, 0.45f, 0.8f), () => ShowScreen(_statsScreen), 76);
-            MakeButton(_home.transform, "Construir / Demoler", new Color(0.2f, 0.6f, 0.55f), () => ShowScreen(_buildScreen), 76);
-        }
-
-        void BuildStats()
-        {
-            _statsScreen = MakeScreen("Stats");
-            MakeButton(_statsScreen.transform, "< Inicio", new Color(0.3f, 0.32f, 0.38f), () => ShowScreen(_home), 40);
-            MakeLabel(_statsScreen.transform, "Estadisticas", 24, Color.white, FontStyle.Bold, 30);
-
-            // grilla 2x2 de cuadrados-balanza
-            var grid = new GameObject("Gauges", typeof(RectTransform), typeof(GridLayoutGroup));
-            grid.transform.SetParent(_statsScreen.transform, false);
-            grid.AddComponent<LayoutElement>().minHeight = 300;
+            var grid = new GameObject("BuildRow", typeof(RectTransform), typeof(GridLayoutGroup));
+            grid.transform.SetParent(parent, false);
+            grid.AddComponent<LayoutElement>().minHeight = 60;
             var g = grid.GetComponent<GridLayoutGroup>();
-            g.cellSize = new Vector2(138, 140); g.spacing = new Vector2(8, 8);
+            g.cellSize = new Vector2(60, 60); g.spacing = new Vector2(6, 6);
+            g.constraint = GridLayoutGroup.Constraint.FixedColumnCount; g.constraintCount = 4;
+            g.childAlignment = TextAnchor.MiddleCenter;
+
+            if (palette != null)
+                foreach (var stall in palette)
+                {
+                    if (stall == null) continue;
+                    var s = stall;
+                    var (btn, _) = MakeSquareButton(grid.transform, $"{s.footprintWidth}x{s.footprintHeight}\n${s.cost}",
+                        new Color(0.12f, 0.7f, 0.85f), () => placement.SelectStall(s));
+                    _buyButtons.Add((btn, s));
+                }
+
+            (_demolishBtn, _) = MakeSquareButton(grid.transform, "X", new Color(0.75f, 0.35f, 0.25f), () => placement.EnterDemolishMode());
+        }
+
+        void BuildStatsSection(Transform parent)
+        {
+            // grilla 2x2 de cuadrados-balanza, chica
+            var grid = new GameObject("Gauges", typeof(RectTransform), typeof(GridLayoutGroup));
+            grid.transform.SetParent(parent, false);
+            grid.AddComponent<LayoutElement>().minHeight = 176;
+            var g = grid.GetComponent<GridLayoutGroup>();
+            g.cellSize = new Vector2(94, 86); g.spacing = new Vector2(6, 6);
             g.constraint = GridLayoutGroup.Constraint.FixedColumnCount; g.constraintCount = 2;
             g.childAlignment = TextAnchor.UpperCenter;
 
@@ -166,28 +169,8 @@ namespace Salada.UI
             MakeGauge(grid.transform, "Felicidad", new Color(0.90f, 0.80f, 0.20f), () => _meters != null ? _meters.happiness : 0);
             MakeGauge(grid.transform, "Profit", new Color(0.30f, 0.80f, 0.40f), () => _meters != null ? _meters.profit : 0);
 
-            _econText = MakeLabel(_statsScreen.transform, "", 17, new Color(0.85f, 0.88f, 0.92f), FontStyle.Normal, 140);
+            _econText = MakeLabel(parent, "", 13, new Color(0.85f, 0.88f, 0.92f), FontStyle.Normal, 80);
             _econText.alignment = TextAnchor.UpperLeft;
-        }
-
-        void BuildBuild()
-        {
-            _buildScreen = MakeScreen("Build");
-            MakeButton(_buildScreen.transform, "< Inicio", new Color(0.3f, 0.32f, 0.38f), () => ShowScreen(_home), 40);
-            MakeLabel(_buildScreen.transform, "Construir", 24, Color.white, FontStyle.Bold, 30);
-            MakeLabel(_buildScreen.transform, "(solo entre oleadas, mirando a un camino)", 14, new Color(0.6f, 0.65f, 0.72f), FontStyle.Italic, 22);
-
-            if (palette != null)
-                foreach (var stall in palette)
-                {
-                    if (stall == null) continue;
-                    var s = stall;
-                    var (btn, _) = MakeButton(_buildScreen.transform, $"{s.displayName} ({s.footprintWidth}x{s.footprintHeight})  ${s.cost}",
-                        new Color(0.12f, 0.7f, 0.85f), () => placement.SelectStall(s), 56);
-                    _buyButtons.Add((btn, s));
-                }
-
-            (_demolishBtn, _) = MakeButton(_buildScreen.transform, "Demoler", new Color(0.75f, 0.35f, 0.25f), () => placement.EnterDemolishMode(), 56);
         }
 
         // ---- boton de accion fijo (empezar / velocidad / avanzar de dia) ----
@@ -266,14 +249,13 @@ namespace Salada.UI
             return t;
         }
 
-        (Button, Text) MakeButton(Transform parent, string label, Color color, UnityEngine.Events.UnityAction onClick, float minHeight)
+        (Button, Text) MakeSquareButton(Transform parent, string label, Color color, UnityEngine.Events.UnityAction onClick)
         {
             var go = new GameObject("Btn", typeof(RectTransform), typeof(Image), typeof(Button));
             go.transform.SetParent(parent, false);
             go.GetComponent<Image>().color = color;
-            go.AddComponent<LayoutElement>().minHeight = minHeight;
             go.GetComponent<Button>().onClick.AddListener(onClick);
-            var text = MakeFilledText(go.transform, label, 16, Color.white, TextAnchor.MiddleCenter);
+            var text = MakeFilledText(go.transform, label, 12, Color.white, TextAnchor.MiddleCenter);
             return (go.GetComponent<Button>(), text);
         }
 
@@ -303,10 +285,10 @@ namespace Salada.UI
             frt.sizeDelta = new Vector2(-8, 0);
             fillGo.GetComponent<Image>().color = color;
 
-            MakeFilledText(cell.transform, name, 15, Color.white, TextAnchor.UpperCenter);
-            var val = MakeFilledText(cell.transform, "0", 24, Color.white, TextAnchor.LowerCenter);
+            MakeFilledText(cell.transform, name, 10, Color.white, TextAnchor.UpperCenter);
+            var val = MakeFilledText(cell.transform, "0", 16, Color.white, TextAnchor.LowerCenter);
 
-            _gauges.Add(new Gauge { fill = frt, value = val, getter = getter, maxH = 132f });
+            _gauges.Add(new Gauge { fill = frt, value = val, getter = getter, maxH = 78f });
         }
 
         // ---- loop ----
@@ -328,7 +310,7 @@ namespace Salada.UI
 
             // encabezado fijo
             _moneyText.text = "$" + waves.Money;
-            _clockText.text = $"Dia {waves.Day}   ·   {waves.ClockText}   ·   Gastos -${waves.DailyFee()}";
+            _clockText.text = $"Dia {waves.Day} · {waves.ClockText} · Gastos ${waves.DailyFee()}";
 
             // boton de accion
             if (building)
@@ -359,7 +341,6 @@ namespace Salada.UI
             }
             if (_econText != null)
                 _econText.text =
-                    $"Cuota proxima: ${waves.DailyFee()}\n" +
                     $"Ventas: {waves.SalesWon}  Perdidas: {waves.SalesLost}\n" +
                     $"Escaparon: {waves.Escaped}  Clientes: {Client.Active.Count}" +
                     (_effects == null || _effects.ActiveDescriptions().Count == 0 ? ""

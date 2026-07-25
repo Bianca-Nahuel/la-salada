@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.GameEvent
   id: ev_feria
   title: Finde largo
-  speaker: {fileID: 11400000, guid: da423fb62ad266048a8b445a467db8ac, type: 2}
+  speaker: {fileID: 11400000, guid: ebb13c032a1ec9f45a1f737e7c4eb783, type: 2}
   description: "Se viene mucha gente. Podemos aprovechar para vender m\xE1s."
   mandatory: 0
   repeatable: 1

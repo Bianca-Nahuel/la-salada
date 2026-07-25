@@ -45,7 +45,7 @@ namespace Salada.UI
 
         void Start()
         {
-            _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _font = UIFont.Get();
             Build();
             _root.SetActive(false);
         }
@@ -119,7 +119,7 @@ namespace Salada.UI
 
         public void Play(char zone, Owner attacker, Owner defender, int attackerPower, int defenderPower, Action<Owner, float> onResolved)
         {
-            if (_root == null) { _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); Build(); }
+            if (_root == null) { _font = UIFont.Get(); Build(); }
             _onResolved = onResolved;
 
             bool playerIsAttacker = attacker == Owner.Player;

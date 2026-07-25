@@ -26,14 +26,16 @@ MonoBehaviour:
     mode: 1
     events: []
     options: []
-  - type: 5
+  - type: 6
     intValue: 0
     value: 1
     meter: 0
     mode: 1
     events:
     - {fileID: 11400000, guid: 18a9bfa674fab0d4aad52795ec10c21a, type: 2}
-    options: []
+    options:
+    - gameEvent: {fileID: 11400000, guid: 18a9bfa674fab0d4aad52795ec10c21a, type: 2}
+      optionId: ev_afip_opt_gritos
   options:
   - id: ev_ojo_opt_hago_lo_que_quiero
     label: Yo hago lo que se me cante

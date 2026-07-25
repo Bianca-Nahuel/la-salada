@@ -8,5 +8,7 @@ namespace Salada.Game
     {
         public string characterName = "Personaje";
         public Color color = new Color(0.9f, 0.9f, 0.95f);
+        [Tooltip("Retrato opcional mostrado por encima del popup de eventos. Si esta vacio, no se muestra nada.")]
+        public Sprite sprite;
     }
 }

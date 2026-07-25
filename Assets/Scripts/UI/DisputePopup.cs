@@ -18,7 +18,7 @@ namespace Salada.UI
 
         void Start()
         {
-            _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _font = UIFont.Get();
             Build();
             _root.SetActive(false);
         }
@@ -49,7 +49,7 @@ namespace Salada.UI
 
         public void Show(char zone, TerritoryManager territory, WaveManager waves)
         {
-            if (_root == null) { _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); Build(); }
+            if (_root == null) { _font = UIFont.Get(); Build(); }
             Clear();
             AddText($"Zona {zone} en disputa", 22, new Color(1f, 0.85f, 0.5f), FontStyle.Bold, 32);
             AddText($"Los rivales se ven {territory.TensionLine(zone)}.", 16, new Color(0.85f, 0.88f, 0.94f), FontStyle.Italic, 26);

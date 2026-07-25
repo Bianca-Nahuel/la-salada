@@ -27,7 +27,7 @@ namespace Salada.UI
 
         void BuildButtons()
         {
-            var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            var font = UIFont.Get();
 
             if (palette != null)
             {

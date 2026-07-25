@@ -1,4 +1,5 @@
 using UnityEngine;
+using Salada.UI;
 
 namespace Salada.Combat
 {
@@ -16,7 +17,7 @@ namespace Salada.Combat
             var go = new GameObject("FloatingText");
             go.transform.position = pos + new Vector3(0f, 0.2f, 0f);
             var tm = go.AddComponent<TextMesh>();
-            var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            var font = UIFont.Get();
             tm.font = font;
             go.GetComponent<MeshRenderer>().sharedMaterial = font.material;
             go.GetComponent<MeshRenderer>().sortingOrder = 40;
