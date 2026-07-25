@@ -27,7 +27,7 @@ namespace Salada.UI
 
         const float HeaderH = 82f;
         const float FooterH = 70f;
-        static readonly float[] Speeds = { 1f, 2f, 3f, 0.5f };
+        static readonly float[] Speeds = { 1f, 2f, 5f, 0.5f };
 
         private RectTransform _rt;
         private Text _tabLabel;
@@ -305,13 +305,13 @@ namespace Salada.UI
             if (waves == null) return;
             bool building = waves.IsBuilding;
 
-            // al terminar una oleada, volver a velocidad normal
-            if (building && !_prevBuilding) { _speedIdx = 0; Time.timeScale = 1f; }
+            // al terminar una oleada: volver a velocidad normal y re-expandir el celular si estaba retraido
+            if (building && !_prevBuilding) { _speedIdx = 0; Time.timeScale = 1f; _shown = true; }
             _prevBuilding = building;
 
             // encabezado fijo
             _moneyText.text = "$" + waves.Money;
-            _clockText.text = $"Dia {waves.Day}   ·   {waves.ClockText}   ·   Oleada {Mathf.Min(waves.WavesToday + 1, waves.wavesPerDay)}/{waves.wavesPerDay}";
+            _clockText.text = $"Dia {waves.Day}   ·   {waves.ClockText}   ·   Gastos -${waves.DailyFee()}";
 
             // boton de accion
             if (building)

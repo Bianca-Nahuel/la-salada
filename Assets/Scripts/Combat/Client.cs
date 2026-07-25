@@ -23,9 +23,14 @@ namespace Salada.Combat
         private List<Vector3> _path;
         private int _idx;
         private float _speed;
+        private float _rushSpeed;      // velocidad en el tramo "rush" (hasta el centro)
+        private int _rushUntil;        // waypoints [0.._rushUntil) se recorren a _rushSpeed
         private float _threshold;
         private float _pauseDuration;
         private float _total;
+        private float _convinceDecay;  // atencion que pierde por segundo si nadie le pega
+        private float _hitTimer;       // gracia desde el ultimo golpe antes de empezar a decaer
+        private const float HitGrace = 0.5f;
         private readonly Dictionary<Owner, float> _byFaction = new Dictionary<Owner, float>();
         private readonly Dictionary<PlacedStall, float> _byStall = new Dictionary<PlacedStall, float>();
 
@@ -52,21 +57,46 @@ namespace Salada.Combat
         /// <summary>Puesto ganador de la venta (seteado al vender); null si aun no vendio.</summary>
         public PlacedStall LastSaleStall { get; private set; }
 
+        public bool Rushing => _rushUntil > 0;                  // para testeo
+        public int PathLength => _path != null ? _path.Count : 0; // para testeo
+        /// <summary>Corre el decaimiento por 'seconds' saltando la gracia (para testeo).</summary>
+        public void DebugForceDecay(float seconds)
+        {
+            _hitTimer = -1f;
+            float dec = _convinceDecay * seconds;
+            var keys = new List<Owner>(_byFaction.Keys);
+            foreach (var f in keys) if (_byFaction[f] > 0f) _byFaction[f] = Mathf.Max(0f, _byFaction[f] - dec);
+            _total = 0f;
+            foreach (var kv in _byFaction) _total += kv.Value;
+            if (_body != null) UpdateBar();
+        }
+
         public void Init(GridManager grid, List<Vector3> path, float speed, float threshold, float pauseDuration,
-            float size, Color baseColor, Action<Client, Owner> onConverted, Action<Client> onEscaped)
+            float size, Color baseColor, float convinceDecay, Action<Client, Owner> onConverted, Action<Client> onEscaped)
         {
             _grid = grid;
             _path = path;
             _idx = 0;
             _speed = speed;
+            _rushSpeed = speed;
+            _rushUntil = 0;
             _threshold = threshold;
             _pauseDuration = pauseDuration;
+            _convinceDecay = convinceDecay;
             _baseColor = baseColor;
             _onConverted = onConverted;
             _onEscaped = onEscaped;
 
             transform.position = path[0];
             BuildVisuals(size, baseColor);
+        }
+
+        /// <summary>Cliente que va rapido hasta cierto waypoint (el centro) y despues mas lento.</summary>
+        public void SetRush(int rushUntil, float rushSpeed, float slowSpeed)
+        {
+            _rushUntil = rushUntil;
+            _rushSpeed = rushSpeed;
+            _speed = slowSpeed;
         }
 
         void BuildVisuals(float size, Color baseColor)
@@ -105,6 +135,7 @@ namespace Salada.Combat
         void Update()
         {
             if (_grid == null || _grid.Model == null) return;
+            if (!_sold) DecayConvince(); // la atencion baja si nadie le pega
             switch (_state)
             {
                 case State.Traveling: FollowPath(Escape); break;
@@ -125,14 +156,31 @@ namespace Salada.Combat
 
         bool MoveStep(Vector3 target)
         {
-            transform.position = Vector3.MoveTowards(transform.position, target, _speed * Time.deltaTime);
+            float sp = _idx < _rushUntil ? _rushSpeed : _speed; // rapido hasta el centro, despues lento
+            transform.position = Vector3.MoveTowards(transform.position, target, sp * Time.deltaTime);
             return (transform.position - target).sqrMagnitude < 0.0004f;
+        }
+
+        /// <summary>Baja la atencion acumulada si paso la gracia sin recibir golpes.</summary>
+        void DecayConvince()
+        {
+            if (_convinceDecay <= 0f || _total <= 0f) return;
+            _hitTimer -= Time.deltaTime;
+            if (_hitTimer > 0f) return; // recien golpeado: no decae todavia
+            float dec = _convinceDecay * Time.deltaTime;
+            var keys = new List<Owner>(_byFaction.Keys);
+            foreach (var f in keys)
+                if (_byFaction[f] > 0f) _byFaction[f] = Mathf.Max(0f, _byFaction[f] - dec);
+            _total = 0f;
+            foreach (var kv in _byFaction) _total += kv.Value;
+            UpdateBar();
         }
 
         /// <summary>Un puesto convence al cliente en 'amount'; roba 'steal' de ese valor a las demas facciones.</summary>
         public void TakeDamage(PlacedStall stall, float amount, float steal)
         {
             if (_sold) return;
+            _hitTimer = HitGrace; // lo golpearon: reinicia la gracia antes de decaer
 
             if (steal > 0f)
             {

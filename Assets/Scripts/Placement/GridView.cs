@@ -18,6 +18,8 @@ namespace Salada.Placement
         [SerializeField] private Sprite woodTile;
         [Tooltip("Tile de ARENA para TODA la arena (Grass).")]
         [SerializeField] private Sprite sandTile;
+        [Tooltip("Cuantas repeticiones del tile por celda (modo Tiled). 1 = estirado.")]
+        [SerializeField] private float tilesPerCell = 2f;
 
         [Header("Tiles de pasillo (legacy, fallback si no hay woodTile)")]
         [SerializeField] private MapTileSet tileSet;                 // tiles elegibles por celda (digitos)
@@ -74,10 +76,23 @@ namespace Salada.Placement
                         tile = sandTile; // TODA la arena = tile de arena
                     }
 
-                    if (tile != null)
+                    bool baseTile = tile != null && (tile == woodTile || tile == sandTile);
+                    if (baseTile && tilesPerCell > 1f)
                     {
+                        // modo Tiled: repite el tile a su tamano natural, tilesPerCell veces por celda
                         sr.sprite = tile;
-                        var b = tile.bounds.size; // escala para llenar la celda (los tiles chicos se agrandan)
+                        var ns = tile.bounds.size;
+                        float rep = Mathf.Max(1f, tilesPerCell);
+                        go.transform.localScale = new Vector3(
+                            ns.x > 0 ? (_grid.CellSize / rep) / ns.x : 1f,
+                            ns.y > 0 ? (_grid.CellSize / rep) / ns.y : 1f, 1f);
+                        sr.drawMode = SpriteDrawMode.Tiled;
+                        sr.size = new Vector2(ns.x * rep, ns.y * rep);
+                    }
+                    else if (tile != null)
+                    {
+                        sr.sprite = tile; // estirado: un tile agrandado a la celda
+                        var b = tile.bounds.size;
                         go.transform.localScale = new Vector3(b.x > 0 ? _grid.CellSize / b.x : 1f, b.y > 0 ? _grid.CellSize / b.y : 1f, 1f);
                     }
                     else
@@ -143,7 +158,7 @@ namespace Salada.Placement
                 foreach (var (cell, owner) in _grid.Layout.RivalStarts())
                 {
                     if (!model.CanPlace(cell, Vector2Int.one, out _)) continue;
-                    var facing = model.NearestAisleDirection(model.FootprintCenterWorld(cell, Vector2Int.one));
+                    var facing = model.FacingToAisle(cell);
                     _grid.SpawnStall(cell, Vector2Int.one, owner, facing, rivalStallData);
                 }
         }

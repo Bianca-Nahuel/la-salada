@@ -336,6 +336,20 @@ namespace Salada.Placement
             return path;
         }
 
+        /// <summary>
+        /// Direccion hacia un pasillo ADYACENTE a la celda (para orientar un puesto a un camino).
+        /// Si hay varios pasillos adyacentes, elige uno variando por celda (no siempre el mismo lado).
+        /// Cae a NearestAisleDirection si no hay ninguno adyacente.
+        /// </summary>
+        public Vector2Int FacingToAisle(Vector2Int cell)
+        {
+            var dirs = new List<Vector2Int>();
+            foreach (var d in Card) if (IsAisle(cell + d)) dirs.Add(d);
+            if (dirs.Count == 0) return NearestAisleDirection(CellToWorldCenter(cell));
+            int idx = Mathf.Abs(cell.x * 7 + cell.y * 13) % dirs.Count;
+            return dirs[idx];
+        }
+
         /// <summary>Direccion cardinal hacia el pasillo mas cercano desde un centro de mundo (para orientar precolocados).</summary>
         public Vector2Int NearestAisleDirection(Vector2 worldCenter)
         {
