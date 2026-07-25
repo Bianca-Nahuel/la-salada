@@ -119,6 +119,156 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &57626247
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 57626250}
+  - component: {fileID: 57626249}
+  - component: {fileID: 57626248}
+  - component: {fileID: 57626251}
+  m_Layer: 0
+  m_Name: Territory
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &57626248
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 57626247}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0f9301a1fee355479f112909ccff10d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Salada.Placement.TerritoryController
+  grid: {fileID: 0}
+  cam: {fileID: 0}
+  placement: {fileID: 0}
+  waves: {fileID: 0}
+  territory: {fileID: 0}
+  popup: {fileID: 0}
+--- !u!114 &57626249
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 57626247}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 838c488d60741f94daa97ac973956bee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.TerritoryManager
+  playerHomeZone: a
+  firstRingStalls: 1
+  outerRingStalls: 2
+  rivalExpandStalls: 1
+  powerScale: 4
+  patienceMax: 100
+  dailyDecayBase: 6
+  warnThreshold: 30
+  attackThreshold: 0
+  stealDecay: 4
+  powerGapK: 0.6
+  negotiateBaseCost: 40
+  attackReputationCost: 8
+  attackHostilityGain: 8
+  maxStallLoss: 3
+  rivalClashChance: 0.5
+  rivalClashStallLoss: 1
+  warningColor: {r: 1, g: 0.5, b: 0.2, a: 1}
+--- !u!4 &57626250
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 57626247}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &57626251
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 57626247}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17d2977b59f16a44ebf5e8a3d4d4a506, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.ZoneBuildOverlay
+  grid: {fileID: 0}
+  placement: {fileID: 0}
+  territory: {fileID: 0}
+  sortingOrder: 2
+  ownColor: {r: 0.3, g: 0.8, b: 1, a: 0.38}
+  adjFreeColor: {r: 0.3, g: 1, b: 0.35, a: 0.38}
+  adjDisputeColor: {r: 1, g: 0.9, b: 0.2, a: 0.42}
+  blockedColor: {r: 1, g: 0.3, b: 0.3, a: 0.33}
+--- !u!1 &200373246
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 200373247}
+  - component: {fileID: 200373248}
+  m_Layer: 0
+  m_Name: DisputePopup
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &200373247
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 200373246}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1770848653}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &200373248
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 200373246}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce071a9a292cf1e418db0b8a1f009cb5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Salada.UI.DisputePopup
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -131,6 +281,7 @@ GameObject:
   - component: {fileID: 330585545}
   - component: {fileID: 330585544}
   - component: {fileID: 330585547}
+  - component: {fileID: 330585548}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -256,6 +407,23 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!114 &330585548
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 330585543}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3757f42b5d2802b4e92d7bf6de94e1e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.CameraController
+  grid: {fileID: 0}
+  keyPanSpeed: 9
+  zoomStep: 0.6
+  minZoom: 2.5
+  startZoom: 5
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -432,6 +600,54 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1108250163
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1108250164}
+  - component: {fileID: 1108250165}
+  m_Layer: 0
+  m_Name: WarningPopup
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1108250164
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1108250163}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1770848653}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1108250165
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1108250163}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7cf3645cc5dbfff4c826987edd9f9cbd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Salada.UI.WarningPopup
 --- !u!1 &1220707461
 GameObject:
   m_ObjectHideFlags: 0
@@ -569,7 +785,7 @@ MonoBehaviour:
   grid: {fileID: 2114994001}
   baseClients: 4
   perWaveIncrement: 1
-  spawnInterval: 1.3
+  waveDuration: 45
   clientSpeed: 1.8
   convinceThreshold: 100
   clientSize: 0.5
@@ -579,10 +795,17 @@ MonoBehaviour:
   saleReward: 10
   refundFraction: 0.5
   wavesPerDay: 3
+  dayStartHour: 9
+  hoursPerWave: 4
   salaryPerStall: 5
   protectionBase: 30
   protectionPerDay: 10
-  expandEvery: 3
+  enemyExpansion:
+    baseCost: 3
+    growth: 2
+  neutralExpansion:
+    baseCost: 3
+    growth: 2
   expansionStallData: {fileID: 11400000, guid: 199c3582a5225db4a9533694c1a6578f, type: 2}
   reputationPerSale: 0.5
   hostilityPerSale: 0.3
@@ -755,8 +978,62 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 199c3582a5225db4a9533694c1a6578f, type: 2}
   - {fileID: 11400000, guid: 033ba163611aba44e94093e4726211e5, type: 2}
   - {fileID: 11400000, guid: 29206da80e545964b98add3c7d9ca1f3, type: 2}
-  width: 270
+  width: 320
   slideSpeed: 8
+--- !u!1 &1759415789
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1759415790}
+  - component: {fileID: 1759415791}
+  m_Layer: 0
+  m_Name: DisputeMinigame
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1759415790
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1759415789}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1770848653}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1759415791
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1759415789}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 10a7e7c8afe136141881710304ce38ef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Salada.UI.DisputeMinigame
+  playerPush: 0.06
+  basePull: 0.14
+  pullGapK: 0.12
+  minPullMult: 0.4
+  maxPullMult: 1.6
+  barPixels: 440
 --- !u!1 &1770848649
 GameObject:
   m_ObjectHideFlags: 0
@@ -854,6 +1131,9 @@ RectTransform:
   m_Children:
   - {fileID: 1653535088}
   - {fileID: 1610576016}
+  - {fileID: 200373247}
+  - {fileID: 1759415790}
+  - {fileID: 1108250164}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -895,6 +1175,7 @@ MonoBehaviour:
   grid: {fileID: 2114994001}
   ghost: {fileID: 2131818606}
   cam: {fileID: 330585545}
+  territory: {fileID: 0}
 --- !u!114 &2114994001
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -915,6 +1196,7 @@ MonoBehaviour:
   playerColor: {r: 0.1, g: 0.85, b: 0.95, a: 1}
   neutralColor: {r: 0.95, g: 0.85, b: 0.15, a: 1}
   enemyColor: {r: 0.9, g: 0.1, b: 0.1, a: 1}
+  stallSprites: {fileID: 11400000, guid: 967ab06b5ae431a479f4356325ff255f, type: 2}
   spawnedStallSortingOrder: 3
 --- !u!114 &2114994002
 MonoBehaviour:
@@ -929,7 +1211,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Placement.GridView
   cellSortingOrder: 0
-  stallSortingOrder: 1
+  woodTile: {fileID: 21300000, guid: 3865424749b768a429b578bd31e9d8b8, type: 3}
+  sandTile: {fileID: 21300000, guid: 6fa5235340f772441af860b2e0c3b17a, type: 3}
   tileSet: {fileID: 11400000, guid: a24b390fb29f24d4f846a493eeb48e4e, type: 2}
   aisleTilesHorizontal:
   - {fileID: 21300000, guid: 9d1bd259dd9fa9f47af0745eecf719d9, type: 3}
@@ -1077,3 +1360,4 @@ SceneRoots:
   - {fileID: 1220707464}
   - {fileID: 1770848653}
   - {fileID: 1234581333}
+  - {fileID: 57626250}

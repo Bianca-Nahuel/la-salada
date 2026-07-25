@@ -12,20 +12,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 016eaa59caa68834b89a414b8d014f4f, type: 3}
   m_Name: Map_Default
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Placement.MapLayout
-  width: 16
+  width: 26
   height: 13
   rows:
-  - 1010100000101012
-  - 1AA0AAAAA0AA1AA2
-  - 1AA0RAARR0RR1AA2
-  - 1010101010101012
-  - 1AA0AA1AA0AA1AA2
-  - 1AA0AA1AA0AA1AA2
-  - 1010101010101012
-  - 1AA0AA1AA0AA1AA2
-  - 1AA0YA1AA0AY1AA2
-  - 1010101010101012
-  - 1AA0AA1AA0AA1AA2
-  - 1010101010101012
-  - 1010101010101002
+  - ARARAAEAAAEAAAAAEAAEAAEAEA
+  - E22222222222222Y5YA5AA5A5A
+  - AAAAAA3AAA0AAA5A5AA5AA5A5A
+  - E22222311111115A5AA5AA5A5A
+  - AAAAAA3AAA0AAA55555555555A
+  - AAAAAA311111115A5AA5AA5A5A
+  - E333330AAA0AAA5Y5AA5AA5A5A
+  - AAAAAA0AAA0AAA5A5AA5AA5A5A
+  - AAAAAA111111115Y5AA5AA5A5A
+  - E222222AAA0AAA5A5AA5AA5A5A
+  - AAARAA2AAA0AAA5A5AA5AA5A5A
+  - E111111111011151222222222A
+  - ARAAAAEAAAEAAAAAEAAEAAEAAA
+  zoneRows:
+  - aaaaaahhhhhhhhii.in.nn.o.o
+  - aaaaaahhhhhhhhiiiinnnnoooo
+  - aaaaaahhhhhhhhiiiinnnnoooo
+  - bbbbbbhhhhhhhhiiiinnnnoooo
+  - bbbbbbggggggggjjiinnnnoooo
+  - bbbbbbggggggggjjkkkkmmmppp
+  - ccccccggggggggjjkkkkmmmppp
+  - ccccccffffffffjjkkkkmmmppp
+  - ccccccffffffffjjkkklllpppp
+  - ddddddffffffffjjkkklllpppp
+  - ddddddeeeeeeeejjkkklllpppp
+  - ddddddeeeeeeeejjlllllllqqq
+  - ddddddeeeeeeeejj.ll.lllqqq
+  playerHomeZone: 113
   prePlaced: []

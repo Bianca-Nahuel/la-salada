@@ -21,7 +21,7 @@ namespace Salada.UI
 
         void Start()
         {
-            if (placement == null) placement = FindFirstObjectByType<PlacementController>();
+            if (placement == null) placement = FindAnyObjectByType<PlacementController>();
             BuildButtons();
         }
 

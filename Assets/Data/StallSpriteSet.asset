@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25a104b7d1fee7946a4127002002f855, type: 3}
+  m_Name: StallSpriteSet
+  m_EditorClassIdentifier: Assembly-CSharp::Salada.Placement.StallSpriteSet
+  player:
+    front: {fileID: 21300000, guid: 21041a94188269546a29056bf8c88bc3, type: 3}
+    back: {fileID: 21300000, guid: ba8b1f6c61ddb6943a25c8d3f56417be, type: 3}
+    left: {fileID: 21300000, guid: 86e267e43d7dac94d808fd6dbbaf7098, type: 3}
+    right: {fileID: 21300000, guid: 7fe1b2ad0df6c814ca7f0fcdd0cb709d, type: 3}
+  enemy:
+    front: {fileID: 21300000, guid: a14e3afba100d7a41a1b87ca50c82baf, type: 3}
+    back: {fileID: 21300000, guid: 627f82e06df88374d9d168a526799358, type: 3}
+    left: {fileID: 21300000, guid: 8f3466d93c6141d4e8f2fb96cd3f67fd, type: 3}
+    right: {fileID: 21300000, guid: f3021aff86a62e94093d51e5d239b06d, type: 3}
+  neutral:
+    front: {fileID: 21300000, guid: 734e0b880a728ed45b658b4308b3561a, type: 3}
+    back: {fileID: 21300000, guid: b06a1b7c58520434b9e495d7e21ebdc0, type: 3}
+    left: {fileID: 21300000, guid: 8ca1c0e4c957bba4a8f8925a3ef0e657, type: 3}
+    right: {fileID: 21300000, guid: 71210f4ea2863814e99c5139e7e26aed, type: 3}

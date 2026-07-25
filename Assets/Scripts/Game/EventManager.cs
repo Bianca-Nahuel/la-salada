@@ -31,10 +31,10 @@ namespace Salada.Game
 
         void Start()
         {
-            _waves = FindFirstObjectByType<WaveManager>();
-            _meters = FindFirstObjectByType<BusinessMeters>();
-            _effects = FindFirstObjectByType<GameEffects>();
-            _popup = FindFirstObjectByType<EventPopup>(FindObjectsInactive.Include);
+            _waves = FindAnyObjectByType<WaveManager>();
+            _meters = FindAnyObjectByType<BusinessMeters>();
+            _effects = FindAnyObjectByType<GameEffects>();
+            _popup = FindAnyObjectByType<EventPopup>(FindObjectsInactive.Include);
             if (_popup != null) _popup.Init(_waves, _meters);
             if (_waves != null) _waves.DayPassed += OnDayPassed;
         }

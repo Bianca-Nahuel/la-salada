@@ -24,6 +24,9 @@ namespace Salada.Placement
         public Color neutralColor = new Color(0.95f, 0.85f, 0.15f); // amarillo = rival "distinto"
         public Color enemyColor = new Color(0.90f, 0.10f, 0.10f);   // rojo = rival
 
+        [Header("Sprites de puestos 1x1")]
+        [SerializeField] private StallSpriteSet stallSprites;
+
         [Header("Spawn")]
         [SerializeField] private int spawnedStallSortingOrder = 3;
         private Transform _spawnedRoot;
@@ -46,8 +49,12 @@ namespace Salada.Placement
             }
             var origin = (Vector2)transform.position;
             var cells = mapLayout.BuildCells();
-            Model = new GridModel(mapLayout.width, mapLayout.height, cells, origin, cellSize, mapLayout.EntranceCells());
+            Model = new GridModel(mapLayout.width, mapLayout.height, cells, origin, cellSize,
+                mapLayout.EntranceCells(), mapLayout.BuildZones());
         }
+
+        /// <summary>Sprite ilustrado del puesto para esa faccion+direccion (null si no hay set).</summary>
+        public Sprite StallSpriteFor(Owner owner, Vector2Int facing) => stallSprites != null ? stallSprites.Get(owner, facing) : null;
 
         public Color ColorFor(Owner owner)
         {
@@ -70,9 +77,21 @@ namespace Salada.Placement
             if (_spawnedRoot == null) _spawnedRoot = new GameObject("SpawnedStalls").transform;
 
             var center = Model.FootprintCenterWorld(cell, footprint);
-            var size = new Vector2(footprint.x * cellSize - stallInset, footprint.y * cellSize - stallInset);
-            var view = Salada.Util.StallVisual.Create($"Stall_{owner}_{cell.x}_{cell.y}", _spawnedRoot,
-                center, size, ColorFor(owner), facing, spawnedStallSortingOrder, spawnedStallSortingOrder + 1, cellSize);
+            string vname = $"Stall_{owner}_{cell.x}_{cell.y}";
+
+            // Puestos 1x1: usar el sprite ilustrado por faccion+direccion; el resto, bloque de color.
+            Sprite sprite = (stallSprites != null && footprint == Vector2Int.one) ? stallSprites.Get(owner, facing) : null;
+            GameObject view;
+            if (sprite != null)
+            {
+                view = Salada.Util.StallVisual.CreateSprite(vname, _spawnedRoot, center, cellSize, sprite, spawnedStallSortingOrder);
+            }
+            else
+            {
+                var size = new Vector2(footprint.x * cellSize - stallInset, footprint.y * cellSize - stallInset);
+                view = Salada.Util.StallVisual.Create(vname, _spawnedRoot, center, size, ColorFor(owner), facing,
+                    spawnedStallSortingOrder, spawnedStallSortingOrder + 1, cellSize);
+            }
 
             var stall = Model.Place(cell, footprint, owner, view, facing);
             if (data != null)
