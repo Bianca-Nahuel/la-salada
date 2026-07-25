@@ -30,7 +30,7 @@ MonoBehaviour:
   options:
   - id: ev_capacitacion_opt_acceder
     label: Acceder
-    outcome:
+    outcome: 
     hostility: 0
     reputation: 0
     happiness: 0
@@ -49,7 +49,7 @@ MonoBehaviour:
     specialPermanent: 1
   - id: ev_capacitacion_opt_negar
     label: Negarse
-    outcome:
+    outcome: 
     hostility: 0
     reputation: 0
     happiness: 0

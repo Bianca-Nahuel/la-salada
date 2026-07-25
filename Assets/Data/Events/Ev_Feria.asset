@@ -15,7 +15,7 @@ MonoBehaviour:
   id: ev_feria
   title: Finde largo
   speaker: {fileID: 11400000, guid: da423fb62ad266048a8b445a467db8ac, type: 2}
-  description: Se viene mucha gente. Podemos aprovechar para vender mas.
+  description: "Se viene mucha gente. Podemos aprovechar para vender m\xE1s."
   mandatory: 0
   repeatable: 1
   conditions:
@@ -29,7 +29,7 @@ MonoBehaviour:
   options:
   - id: ev_feria_opt_publicidad
     label: Invertir en publicidad
-    outcome:
+    outcome: 
     hostility: 0
     reputation: 0
     happiness: 0
@@ -48,7 +48,7 @@ MonoBehaviour:
     specialPermanent: 0
   - id: ev_feria_opt_promo2x1
     label: Promociones 2x1
-    outcome:
+    outcome: 
     hostility: 0
     reputation: 0
     happiness: 0
@@ -67,7 +67,7 @@ MonoBehaviour:
     specialPermanent: 0
   - id: ev_feria_opt_negar
     label: Negarse
-    outcome:
+    outcome: 
     hostility: 0
     reputation: 0
     happiness: 0

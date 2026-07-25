@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: Ev_Bienvenida
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.GameEvent
   id: ev_bienvenida
-  title: Primer dia en La Salada
+  title: "Primer d\xEDa en La Salada"
   speaker: {fileID: 11400000, guid: da423fb62ad266048a8b445a467db8ac, type: 2}
   description: Bienvenido, pibe. Aca se labura duro pero se hace la diferencia. Cuidate
-    de los punteros.
+    de los puesteros.
   mandatory: 1
   repeatable: 0
   conditions:

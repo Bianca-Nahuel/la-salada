@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Salada.Combat;
@@ -38,7 +39,6 @@ namespace Salada.Game
 
         private readonly Queue<GameEvent> _showQueue = new Queue<GameEvent>(); // eventos del dia a mostrar
         private bool _showing;
-        private int _rng = 987654;
 
         public bool IsEventPending => _showing || _showQueue.Count > 0;
         public GameEvent[] Events { get => events; set => events = value; }
@@ -54,6 +54,18 @@ namespace Salada.Game
             if (_gameOver == null) _gameOver = gameObject.AddComponent<GameOverController>();
             if (_popup != null) _popup.Init(_waves, _meters, _gameOver);
             if (_waves != null) _waves.DayPassed += OnDayPassed;
+            StartCoroutine(TriggerInitialDay());
+        }
+
+        /// <summary>
+        /// WaveManager solo dispara DayPassed al completar las primeras wavesPerDay oleadas
+        /// (para entonces Day ya paso a 2). Sin esto, el dia 1 nunca se evalua. Se espera un
+        /// frame para que todos los Start() (WaveManager incluido) ya hayan corrido.
+        /// </summary>
+        IEnumerator TriggerInitialDay()
+        {
+            yield return null;
+            OnDayPassed();
         }
 
         void OnDestroy()
@@ -64,10 +76,10 @@ namespace Salada.Game
         void OnDayPassed()
         {
             if (events == null || _popup == null) return;
-            int day = _waves != null ? _waves.Day : 1;
+            int day = _waves != null ? _waves.Day : 1; // 1) el dia ya avanzo (WaveManager.Day++ corre antes de disparar DayPassed)
 
-            UpdateMandatoryQueue(day);
-            UpdatePool(day);
+            UpdatePool(day);            // 2) sumar al pool los aleatorios que recien cumplen condiciones
+            UpdateMandatoryQueue(day);   // 3) sumar a la cola los obligatorios que recien cumplen condiciones
 
             int taken = 0;
             while (taken < MaxMandatoryPerDay && _mandatoryPending.Count > 0)
@@ -119,7 +131,7 @@ namespace Salada.Game
         GameEvent PickFromPool()
         {
             if (_pool.Count == 0) return null;
-            return _pool[NextInt(_pool.Count)];
+            return _pool[UnityEngine.Random.Range(0, _pool.Count)];
         }
 
         // ---- Condiciones ----
@@ -265,13 +277,6 @@ namespace Salada.Game
             if (ev == null || _popup == null) return;
             _showQueue.Enqueue(ev);
             if (!_showing) ShowNext();
-        }
-
-        int NextInt(int max)
-        {
-            _rng = _rng * 1103515245 + 12345;
-            int v = (_rng >> 16) & 0x7fff;
-            return max <= 0 ? 0 : v % max;
         }
     }
 }

@@ -30,7 +30,7 @@ MonoBehaviour:
   options:
   - id: ev_trucha_opt_dametodo
     label: Dame todo
-    outcome:
+    outcome: 
     hostility: 0
     reputation: -12
     happiness: 0
@@ -49,7 +49,7 @@ MonoBehaviour:
     specialPermanent: 0
   - id: ev_trucha_opt_rechazar
     label: Rechazar, somos serios
-    outcome:
+    outcome: 
     hostility: 0
     reputation: 8
     happiness: 0

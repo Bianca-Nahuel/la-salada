@@ -17,7 +17,7 @@ MonoBehaviour:
   speaker: {fileID: 11400000, guid: 00112233445566778899aabbccddeef2, type: 2}
   description: Ves una intimidante cara conocida alejarse corriendo de uno de tus
     puestos, ahora completamente destruido.
-  mandatory: 0
+  mandatory: 1
   repeatable: 0
   conditions:
   - type: 0
@@ -39,7 +39,7 @@ MonoBehaviour:
   options:
   - id: ev_jdm_opt_hijodebu
     label: Que hijodebu
-    outcome:
+    outcome: 
     hostility: 0
     reputation: 0
     happiness: 0

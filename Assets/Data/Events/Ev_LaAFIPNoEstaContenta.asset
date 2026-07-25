@@ -16,7 +16,7 @@ MonoBehaviour:
   title: La AFIP no esta contenta
   speaker: {fileID: 11400000, guid: 6381764aa56e03842bade0c1abb670eb, type: 2}
   description: Vas a tener que regularizar tu situacion o se va a pudrir.
-  mandatory: 0
+  mandatory: 1
   repeatable: 0
   conditions:
   - type: 0
@@ -37,7 +37,7 @@ MonoBehaviour:
   options:
   - id: ev_lanec_opt_pagar_multa
     label: Pagar multa
-    outcome:
+    outcome: 
     hostility: -10
     reputation: 0
     happiness: 0
@@ -56,7 +56,7 @@ MonoBehaviour:
     specialPermanent: 0
   - id: ev_lanec_opt_coimear
     label: Coimear
-    outcome:
+    outcome: 
     hostility: -10
     reputation: 0
     happiness: 0
@@ -75,7 +75,7 @@ MonoBehaviour:
     specialPermanent: 0
   - id: ev_lanec_opt_negar
     label: Negarse
-    outcome:
+    outcome: 
     hostility: 100
     reputation: 0
     happiness: 0

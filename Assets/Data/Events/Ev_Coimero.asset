@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: Ev_Coimero
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.GameEvent
   id: ev_coimero
-  title: Asi que sos coimero?
+  title: "\xBFAsi que sos coimero?"
   speaker: {fileID: 11400000, guid: 00112233445566778899aabbccddeef3, type: 2}
   description: Al parecer todos quieren agarrar del tarro (o cerrar tu puestito,
     por supuesto).
-  mandatory: 0
+  mandatory: 1
   repeatable: 0
   conditions:
   - type: 0
@@ -43,7 +43,7 @@ MonoBehaviour:
   options:
   - id: ev_coimero_opt_coimear
     label: Coimear
-    outcome:
+    outcome: 
     hostility: 0
     reputation: 0
     happiness: 0

@@ -51,3 +51,7 @@ sysinfo.txt
 # Local tooling / solution
 .claude/
 *.slnx
+
+# Unity crash recovery
+/Assets/_Recovery/
+/Assets/_Recovery.meta

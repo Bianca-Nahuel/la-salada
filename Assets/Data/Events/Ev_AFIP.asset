@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Ev_AFIP
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.GameEvent
   id: ev_afip
-  title: Cayo la AFIP
+  title: "Cay\xF3 la AFIP"
   speaker: {fileID: 11400000, guid: 6381764aa56e03842bade0c1abb670eb, type: 2}
   description: Detectaron que el 100% de tus empleados estan en negro y el 0% de
     tus ventas, declaradas.
@@ -30,7 +30,7 @@ MonoBehaviour:
   options:
   - id: ev_afip_opt_coimear
     label: Coimear
-    outcome:
+    outcome: 
     hostility: 0
     reputation: 0
     happiness: 0
@@ -49,7 +49,7 @@ MonoBehaviour:
     specialPermanent: 0
   - id: ev_afip_opt_truchos
     label: Mostrar papeles truchos
-    outcome:
+    outcome: 
     hostility: 0
     reputation: -10
     happiness: -5
@@ -68,7 +68,7 @@ MonoBehaviour:
     specialPermanent: 0
   - id: ev_afip_opt_gritos
     label: Echarlos a los gritos
-    outcome:
+    outcome: 
     hostility: 0
     reputation: -15
     happiness: 0

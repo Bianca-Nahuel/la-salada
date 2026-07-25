@@ -18,9 +18,12 @@ namespace Salada.Combat
         [SerializeField] private GridManager grid;
 
         [Header("Oleadas")]
-        public int baseClients = 4;
-        public int perWaveIncrement = 1;
-        public float spawnInterval = 1.3f;
+        [Tooltip("Clientes de la primera oleada (numero fijo, no aleatorio).")]
+        public int baseClients = 6;
+        [Tooltip("Clientes extra por cada oleada que pasa.")]
+        public int perWaveIncrement = 2;
+        [Tooltip("Duracion real de la oleada a x1 (las 4 horas). Los clientes se reparten en este tiempo.")]
+        public float waveDuration = 45f;
 
         [Header("Clientes")]
         public float clientSpeed = 1.8f;
@@ -37,6 +40,10 @@ namespace Salada.Combat
         [Header("Dias / cuota")]
         [Tooltip("Cada cuantas oleadas pasa un dia.")]
         public int wavesPerDay = 3;
+        [Tooltip("Hora en que arranca el dia (primera oleada).")]
+        public int dayStartHour = 9;
+        [Tooltip("Cuantas horas del juego dura cada oleada (9->13->17).")]
+        public int hoursPerWave = 4;
         [Tooltip("Sueldo diario por cada puesto propio (empleados).")]
         public int salaryPerStall = 5;
         [Tooltip("Cuota de proteccion base por dia.")]
@@ -44,9 +51,21 @@ namespace Salada.Combat
         [Tooltip("Cuanto sube la proteccion por cada dia que pasa.")]
         public int protectionPerDay = 10;
 
+        [System.Serializable]
+        public class ExpansionTuning
+        {
+            [Tooltip("Ventas necesarias para la PRIMERA expansion.")] public int baseCost = 3;
+            [Tooltip("Cuantas ventas mas cuesta cada expansion siguiente (cada vez cuesta mas).")] public int growth = 2;
+        }
+
         [Header("Expansion de facciones (al terminar la oleada)")]
-        public int expandEvery = 3;
+        [Tooltip("Ritmo de expansion del rival ROJO (Enemy).")]
+        public ExpansionTuning enemyExpansion = new ExpansionTuning();
+        [Tooltip("Ritmo de expansion del rival AMARILLO (Neutral).")]
+        public ExpansionTuning neutralExpansion = new ExpansionTuning();
         public StallData expansionStallData;
+
+        ExpansionTuning TuningFor(Owner o) => o == Owner.Enemy ? enemyExpansion : neutralExpansion;
 
         [Header("Balanzas por disputa")]
         public float reputationPerSale = 0.5f;   // ganar una venta sube reputacion
@@ -56,28 +75,64 @@ namespace Salada.Combat
         public int Money { get; private set; }
         public int Wave { get; private set; }
         public int Day { get; private set; } = 1;
+        /// <summary>Oleadas ya completadas en el dia actual (0..wavesPerDay).</summary>
+        public int WavesToday { get; private set; }
         public int SalesWon { get; private set; }
         public int SalesLost { get; private set; }
         public int Escaped { get; private set; }
         public Phase CurrentPhase { get; private set; } = Phase.Building;
         public bool IsBuilding => CurrentPhase == Phase.Building;
 
-        /// <summary>Se dispara cuando pasa un dia (cada wavesPerDay oleadas). Lo usa el EventManager.</summary>
+        /// <summary>Ya se jugaron todas las oleadas del dia: solo queda avanzar de dia (manual).</summary>
+        public bool DayComplete => CurrentPhase == Phase.Building && WavesToday >= wavesPerDay;
+
+        private float _waveElapsed;
+
+        /// <summary>Progreso [0..1] de la oleada actual (por tiempo). 0 si no hay oleada.</summary>
+        public float WaveProgress => CurrentPhase == Phase.WaveActive
+            ? Mathf.Clamp01(_waveElapsed / Mathf.Max(0.01f, waveDuration)) : 0f;
+
+        /// <summary>
+        /// Hora del juego a mostrar. En Building = hora de la proxima oleada (9/13/17, o fin de
+        /// dia). Durante la oleada avanza parejo con el tiempo hasta llegar justo a la proxima hora.
+        /// </summary>
+        public float DisplayHour => HourFor(WavesToday, WaveProgress);
+
+        /// <summary>Hora del juego dado cuantas oleadas van jugadas y el progreso [0..1] de la actual.</summary>
+        public float HourFor(int wavesDone, float progress01)
+            => dayStartHour + hoursPerWave * (Mathf.Clamp(wavesDone, 0, wavesPerDay) + Mathf.Clamp01(progress01));
+
+        /// <summary>El reloj como texto "H:MM" (ej "9:00", "13:00").</summary>
+        public string ClockText
+        {
+            get
+            {
+                float h = DisplayHour;
+                int hh = Mathf.FloorToInt(h);
+                int mm = Mathf.FloorToInt((h - hh) * 60f);
+                return $"{hh}:{mm:00}";
+            }
+        }
+
+        /// <summary>Se dispara al avanzar de dia (manual). Lo usa el EventManager.</summary>
         public event System.Action DayPassed;
 
         private readonly Dictionary<Owner, int> _pendingExpansion = new Dictionary<Owner, int>();
+        private readonly Dictionary<Owner, int> _expansionsDone = new Dictionary<Owner, int>();
         private List<Vector2Int> _openings;
         private Transform _clientsParent;
         private int _rng = 12345;
         private BusinessMeters _meters;
         private GameEffects _effects;
+        private Salada.Game.TerritoryManager _territory;
 
         void Start()
         {
-            if (grid == null) grid = FindFirstObjectByType<GridManager>();
+            if (grid == null) grid = FindAnyObjectByType<GridManager>();
             if (grid.Model == null) grid.BuildModel();
-            _meters = FindFirstObjectByType<BusinessMeters>();
-            _effects = FindFirstObjectByType<GameEffects>();
+            _meters = FindAnyObjectByType<BusinessMeters>();
+            _effects = FindAnyObjectByType<GameEffects>();
+            _territory = FindAnyObjectByType<Salada.Game.TerritoryManager>();
             _openings = grid.Model.EntranceCells.Count > 0
                 ? new List<Vector2Int>(grid.Model.EntranceCells)
                 : grid.Model.GetBorderAisleOpenings();
@@ -90,13 +145,18 @@ namespace Salada.Combat
         /// <summary>Sube permanentemente el sueldo diario por puesto. Ej 0.1 = +10%.</summary>
         public void IncreaseSalaryPerStall(float percent) =>
             salaryPerStall = Mathf.Max(0, Mathf.RoundToInt(salaryPerStall * (1f + percent)));
+        void Update()
+        {
+            if (CurrentPhase == Phase.WaveActive) _waveElapsed += Time.deltaTime; // el reloj corre (mas rapido a mayor velocidad)
+        }
 
         // ---- Fase / oleadas ----
 
-        /// <summary>Arranca la proxima oleada (solo si estamos en Building).</summary>
+        /// <summary>Arranca la proxima oleada del dia. Si el dia ya se completo, no hace nada (hay que avanzar de dia).</summary>
         public void StartWave()
         {
             if (CurrentPhase == Phase.WaveActive) return;
+            if (WavesToday >= wavesPerDay) return; // dia completo -> AdvanceDay()
             if (_openings == null || _openings.Count < 2) { Debug.LogError("[WaveManager] Sin bocas suficientes."); return; }
             StartCoroutine(RunOneWave());
         }
@@ -105,21 +165,61 @@ namespace Salada.Combat
         {
             CurrentPhase = Phase.WaveActive;
             Wave++;
+            _waveElapsed = 0f;
             int baseCount = baseClients + perWaveIncrement * (Wave - 1);
             int count = Mathf.Max(0, Mathf.RoundToInt(baseCount * (_effects != null ? _effects.ClientCountMult : 1f)));
-            for (int i = 0; i < count; i++)
+
+            // Oleada por tiempo: los 'count' clientes (numero fijo) se reparten parejo a lo largo
+            // de waveDuration. El cliente i entra cuando el progreso alcanza (i+0.5)/count.
+            int spawned = 0;
+            while (_waveElapsed < waveDuration)
             {
-                SpawnClient();
-                yield return new WaitForSeconds(spawnInterval);
+                while (spawned < count && (spawned + 0.5f) / count <= _waveElapsed / waveDuration)
+                {
+                    SpawnClient();
+                    spawned++;
+                }
+                yield return null;
             }
-            while (Client.Active.Count > 0) yield return null;
+            while (spawned < count) { SpawnClient(); spawned++; } // por si quedo alguno pendiente
+            while (Client.Active.Count > 0) yield return null;    // dejar que terminen de salir
 
             if (_effects == null || !_effects.ExpansionBlocked) EndOfWaveExpansion();
-            bool dayPassed = (Wave % wavesPerDay == 0);
-            if (dayPassed) { ChargeDailyFee(); Day++; }        // paso un dia -> cobrar cuota
             if (_effects != null) _effects.OnWaveEnded();       // vencer efectos de esta oleada
+            WavesToday++;                                        // una oleada mas del dia jugada
             CurrentPhase = Phase.Building;
-            if (dayPassed) DayPassed?.Invoke();                 // disparar el evento del dia
+        }
+
+        /// <summary>
+        /// Avanza al dia siguiente (manual: nunca automatico). Solo cuando ya se jugaron
+        /// todas las oleadas del dia. Cobra la cuota del dia que cierra y dispara el evento diario.
+        /// </summary>
+        public void AdvanceDay()
+        {
+            if (!DayComplete) return;
+            ChargeDailyFee();     // cobra la cuota del dia que se cierra
+            Day++;
+            WavesToday = 0;
+            _waveElapsed = 0f;
+            DayPassed?.Invoke();  // evento del nuevo dia
+        }
+
+        /// <summary>
+        /// Salta las oleadas que falten del dia sin jugarlas (sin clientes ni expansion), pero
+        /// decrementando los efectos especiales igual que si hubieran corrido (para testeo).
+        /// Deja DayComplete=true para poder avanzar de dia con el flujo normal.
+        /// </summary>
+        public void DebugSkipToDayComplete()
+        {
+            if (CurrentPhase != Phase.Building) return;
+            while (WavesToday < wavesPerDay)
+            {
+                Wave++;
+                if (_effects != null) _effects.OnWaveEnded();
+                WavesToday++;
+            }
+            _waveElapsed = 0f;
+            Debug.Log("[Debug] Dia saltado sin jugar oleadas. Ya se puede avanzar de dia.");
         }
 
         // ---- Dias / cuota ----
@@ -189,6 +289,7 @@ namespace Salada.Combat
                     _meters.Add(MeterType.Reputation, reputationPerSale);  // ganar sube reputacion
                     _meters.Add(MeterType.Hostility, hostilityPerSale);   // le sacamos ventas al rival -> nos odia mas
                 }
+                RegisterSteals(c);
             }
             else
             {
@@ -204,6 +305,20 @@ namespace Salada.Combat
             if (_meters != null) _meters.Add(MeterType.Reputation, -reputationPerEscape); // mal servicio
         }
 
+        /// <summary>
+        /// Robo de venta: si el jugador gano un cliente que un rival tambien estaba convenciendo,
+        /// en una zona disputada con ese rival, baja la paciencia de esa disputa.
+        /// </summary>
+        void RegisterSteals(Client c)
+        {
+            if (_territory == null || c.LastSaleStall == null) return;
+            char zone = grid.Model.ZoneOf(c.LastSaleStall.OriginCell);
+            if (zone == '.') return;
+            foreach (var rival in new[] { Owner.Neutral, Owner.Enemy })
+                if (c.ConvinceBy(rival) > 0f)
+                    _territory.RegisterSteal(zone, Owner.Player, rival);
+        }
+
         // ---- Expansion al terminar la oleada ----
 
         void EndOfWaveExpansion()
@@ -215,20 +330,48 @@ namespace Salada.Combat
         void TryExpand(Owner owner)
         {
             if (expansionStallData == null) return;
+            var t = TuningFor(owner);
             _pendingExpansion.TryGetValue(owner, out int n);
-            while (n >= expandEvery) { ExpandFaction(owner); n -= expandEvery; }
+            _expansionsDone.TryGetValue(owner, out int done);
+            // cada expansion cuesta mas ventas que la anterior (ritmo por faccion)
+            while (true)
+            {
+                int need = t.baseCost + t.growth * done;
+                if (n < need) break;
+                if (!ExpandFaction(owner)) break; // sin celda valida -> no gastar las ventas
+                n -= need;
+                done++;
+            }
             _pendingExpansion[owner] = n;
+            _expansionsDone[owner] = done;
         }
 
-        void ExpandFaction(Owner owner)
+        bool ExpandFaction(Owner owner)
         {
             var cell = FindExpansionCell(owner);
-            if (!cell.HasValue) return;
+            if (!cell.HasValue) return false;
             var center = grid.Model.FootprintCenterWorld(cell.Value, Vector2Int.one);
             var facing = grid.Model.NearestAisleDirection(center);
             var stall = grid.SpawnStall(cell.Value, Vector2Int.one, owner, facing, expansionStallData);
-            if (stall != null)
-                FloatingText.Spawn(center, owner == Owner.Enemy ? "Rival rojo +1" : "Rival amarillo +1", grid.ColorFor(owner));
+            if (stall == null) return false;
+            FloatingText.Spawn(center, owner == Owner.Enemy ? "Rival rojo +1" : "Rival amarillo +1", grid.ColorFor(owner));
+            return true;
+        }
+
+        public string DebugExpansionInfo(Owner o)
+        {
+            var t = TuningFor(o);
+            _pendingExpansion.TryGetValue(o, out int n);
+            _expansionsDone.TryGetValue(o, out int d);
+            return $"{o}: pending={n} expansiones={d} proxCosto={t.baseCost + t.growth * d}";
+        }
+
+        /// <summary>Agrega 'n' ventas pendientes a la faccion y corre la expansion (para testeo).</summary>
+        public void DebugFeedSales(Owner o, int n)
+        {
+            _pendingExpansion.TryGetValue(o, out int cur);
+            _pendingExpansion[o] = cur + n;
+            TryExpand(o);
         }
 
         /// <summary>Fuerza una expansion de la faccion (para testeo).</summary>
@@ -248,32 +391,46 @@ namespace Salada.Combat
                 for (int y = 0; y < m.Height; y++)
                 {
                     var cell = new Vector2Int(x, y);
-                    if (m.GetCell(cell) == CellType.Grass && m.GetOccupant(cell) == null)
-                        candidates.Add(cell);
+                    if (m.GetCell(cell) != CellType.Grass || m.GetOccupant(cell) != null) continue;
+                    // los rivales tambien respetan las zonas: solo su zona o adyacente (y no meterse en disputa ajena)
+                    if (_territory != null && !_territory.CanBuild(owner, cell, Vector2Int.one, out _)) continue;
+                    candidates.Add(cell);
                 }
             if (candidates.Count == 0) return null;
 
-            // Hostilidad: los rivales tienden a expandirse cerca de NUESTROS puestos.
-            if (owner == Owner.Enemy && _meters != null && NextFloat() < _meters.HostilityChance)
+            // Direccion segun TU hostilidad: es la probabilidad de que se ACERQUEN a vos.
+            // Ej: hostilidad 20 -> 20% de acercarse, 80% de alejarse. (Vale para rojo y amarillo.)
+            bool playerHasStalls = false;
+            foreach (var s in m.Stalls) if (s.Owner == Owner.Player) { playerHasStalls = true; break; }
+            if (playerHasStalls)
             {
-                var hostile = NearestCandidateTo(candidates, Owner.Player);
-                if (hostile.HasValue) return hostile.Value;
+                float hostChance = _meters != null ? _meters.HostilityChance : 0.5f;
+                bool approach = NextFloat() < hostChance;
+                var pick = approach ? NearestCandidateTo(candidates, Owner.Player)
+                                    : FarthestCandidateFrom(candidates, Owner.Player);
+                if (pick.HasValue) return pick.Value;
             }
 
+            // Sin puestos del jugador todavia: se agrupan cerca de lo propio.
             var nearOwn = new List<Vector2Int>();
             foreach (var cand in candidates)
                 foreach (var s in m.Stalls)
                     if (s.Owner == owner && Manhattan(cand, s.OriginCell) <= 2) { nearOwn.Add(cand); break; }
             if (nearOwn.Count > 0) return nearOwn[NextInt(nearOwn.Count)];
+            return candidates[NextInt(candidates.Count)];
+        }
 
-            Vector2Int best = candidates[0];
-            float bestDist = -1f;
+        /// <summary>Candidato mas LEJANO a cualquier puesto de 'target' (para alejarse); null si no hay.</summary>
+        Vector2Int? FarthestCandidateFrom(List<Vector2Int> candidates, Owner target)
+        {
+            Vector2Int? best = null;
+            int bestD = -1;
             foreach (var cand in candidates)
             {
-                float nearest = float.MaxValue;
-                foreach (var s in m.Stalls)
-                    if (s.Owner != owner) nearest = Mathf.Min(nearest, Manhattan(cand, s.OriginCell));
-                if (nearest > bestDist) { bestDist = nearest; best = cand; }
+                int nearest = int.MaxValue;
+                foreach (var s in grid.Model.Stalls)
+                    if (s.Owner == target) nearest = Mathf.Min(nearest, Manhattan(cand, s.OriginCell));
+                if (nearest != int.MaxValue && nearest > bestD) { bestD = nearest; best = cand; }
             }
             return best;
         }

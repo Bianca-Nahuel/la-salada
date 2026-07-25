@@ -17,7 +17,7 @@ MonoBehaviour:
   speaker: {fileID: 11400000, guid: 00112233445566778899aabbccddeef2, type: 2}
   description: Vinieron a apretarte por no atender los reclamos salariales de tus
     empleados.
-  mandatory: 0
+  mandatory: 1
   repeatable: 0
   conditions:
   - type: 0
@@ -39,7 +39,7 @@ MonoBehaviour:
   options:
   - id: ev_qap_opt_dar_aumento
     label: Dar aumento
-    outcome:
+    outcome: 
     hostility: 0
     reputation: 0
     happiness: 10

@@ -92,7 +92,7 @@ namespace Salada.UI
                     string label = o.label;
 
                     int totalMoney = TotalMoney(o);
-                    if (totalMoney != 0) label += $"\n(${(totalMoney > 0 ? "+" : "")}{totalMoney})";
+                    if (o.money != 0 || o.moneyPerStall != 0) label += $"\n(${(totalMoney > 0 ? "+" : "")}{totalMoney})";
 #if UNITY_EDITOR
                     label += $"\n<{Preview(o)}>";
 #endif
@@ -103,21 +103,21 @@ namespace Salada.UI
         int TotalMoney(EventOption o) =>
             o.money + (o.moneyPerStall != 0 && _waves != null ? o.moneyPerStall * _waves.PlayerStallCount() : 0);
 
+        // Solo se griza si algo quedaria negativo. Superar el maximo no es problema:
+        // el medidor simplemente clampea a 100 (BusinessMeters.Set), como siempre.
         bool WouldBreakLimits(EventOption o)
         {
             int totalMoney = TotalMoney(o);
             if (totalMoney != 0 && _waves != null && _waves.Money + totalMoney < 0) return true;
             if (_meters != null)
             {
-                if (o.hostility != 0 && OutOfRange(_meters.Get(MeterType.Hostility) + o.hostility)) return true;
-                if (o.reputation != 0 && OutOfRange(_meters.Get(MeterType.Reputation) + o.reputation)) return true;
-                if (o.happiness != 0 && OutOfRange(_meters.Get(MeterType.Happiness) + o.happiness)) return true;
-                if (o.profit != 0 && OutOfRange(_meters.Get(MeterType.Profit) + o.profit)) return true;
+                if (o.hostility != 0 && _meters.Get(MeterType.Hostility) + o.hostility < 0) return true;
+                if (o.reputation != 0 && _meters.Get(MeterType.Reputation) + o.reputation < 0) return true;
+                if (o.happiness != 0 && _meters.Get(MeterType.Happiness) + o.happiness < 0) return true;
+                if (o.profit != 0 && _meters.Get(MeterType.Profit) + o.profit < 0) return true;
             }
             return false;
         }
-
-        static bool OutOfRange(float v) => v < 0f || v > 100f;
 
         void ChooseOption(int i)
         {

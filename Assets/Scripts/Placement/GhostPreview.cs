@@ -49,23 +49,40 @@ namespace Salada.Placement
 
         public void SetCellSize(float cellSize) => _cellSize = cellSize;
 
-        public void Show(Vector2 worldCenter, Vector2 size, bool isValid, Vector2Int facing, float range)
+        public void Show(Vector2 worldCenter, Vector2 size, bool isValid, Vector2Int facing, float range, Sprite sprite = null)
         {
             transform.position = new Vector3(worldCenter.x, worldCenter.y, 0f);
-            _body.transform.localScale = new Vector3(size.x, size.y, 1f);
-            _body.color = isValid ? validColor : invalidColor;
             _body.enabled = true;
 
-            if (facing != Vector2Int.zero)
+            if (sprite != null)
             {
-                float half = (Mathf.Abs(facing.x) > 0 ? size.x : size.y) * 0.5f;
-                var off = new Vector2(facing.x, facing.y) * (half + 0.06f);
-                _marker.localPosition = new Vector3(off.x, off.y, 0f);
-                float ms = 0.22f * _cellSize;
-                _marker.localScale = new Vector3(ms, ms, 1f);
-                _markerSr.enabled = true;
+                // Ghost = el sprite real del puesto, tintado verde/rojo. La direccion se ve en el sprite.
+                _body.sprite = sprite;
+                var b = sprite.bounds.size;
+                float mx = Mathf.Max(b.x, b.y);
+                float fit = Mathf.Max(size.x, size.y);
+                float s = mx > 0f ? fit / mx : fit;
+                _body.transform.localScale = new Vector3(s, s, 1f);
+                _body.color = isValid ? new Color(0.55f, 1f, 0.55f, 0.85f) : new Color(1f, 0.45f, 0.45f, 0.85f);
+                _markerSr.enabled = false;
             }
-            else _markerSr.enabled = false;
+            else
+            {
+                _body.sprite = PlaceholderSprite.Unit;
+                _body.transform.localScale = new Vector3(size.x, size.y, 1f);
+                _body.color = isValid ? validColor : invalidColor;
+
+                if (facing != Vector2Int.zero)
+                {
+                    float half = (Mathf.Abs(facing.x) > 0 ? size.x : size.y) * 0.5f;
+                    var off = new Vector2(facing.x, facing.y) * (half + 0.06f);
+                    _marker.localPosition = new Vector3(off.x, off.y, 0f);
+                    float ms = 0.22f * _cellSize;
+                    _marker.localScale = new Vector3(ms, ms, 1f);
+                    _markerSr.enabled = true;
+                }
+                else _markerSr.enabled = false;
+            }
 
             if (range > 0f && facing != Vector2Int.zero)
             {

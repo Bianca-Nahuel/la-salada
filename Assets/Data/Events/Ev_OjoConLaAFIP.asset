@@ -16,7 +16,7 @@ MonoBehaviour:
   title: Ojo con la AFIP, nos vas a traer quilombo
   speaker: {fileID: 11400000, guid: 00112233445566778899aabbccddeef1, type: 2}
   description: Los demas feriantes te advierten que no te metas con la AFIP.
-  mandatory: 0
+  mandatory: 1
   repeatable: 0
   conditions:
   - type: 0
@@ -37,7 +37,7 @@ MonoBehaviour:
   options:
   - id: ev_ojo_opt_hago_lo_que_quiero
     label: Yo hago lo que se me cante
-    outcome:
+    outcome: 
     hostility: 10
     reputation: 5
     happiness: 0
@@ -56,7 +56,7 @@ MonoBehaviour:
     specialPermanent: 0
   - id: ev_ojo_opt_mildis
     label: Te pido mildis
-    outcome:
+    outcome: 
     hostility: -10
     reputation: -5
     happiness: 0

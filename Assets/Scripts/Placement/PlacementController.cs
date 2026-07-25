@@ -18,6 +18,7 @@ namespace Salada.Placement
         [SerializeField] private GridManager grid;
         [SerializeField] private GhostPreview ghost;
         [SerializeField] private Camera cam;
+        [SerializeField] private Salada.Game.TerritoryManager territory;
 
         public Mode CurrentMode { get; private set; } = Mode.Idle;
         public StallData SelectedStall { get; private set; }
@@ -32,8 +33,9 @@ namespace Salada.Placement
         void Start()
         {
             if (cam == null) cam = Camera.main;
-            if (grid == null) grid = FindFirstObjectByType<GridManager>();
-            _waves = FindFirstObjectByType<WaveManager>();
+            if (grid == null) grid = FindAnyObjectByType<GridManager>();
+            _waves = FindAnyObjectByType<WaveManager>();
+            if (territory == null) territory = FindAnyObjectByType<Salada.Game.TerritoryManager>();
             if (ghost != null) ghost.SetCellSize(grid.CellSize);
         }
 
@@ -90,8 +92,11 @@ namespace Salada.Placement
             }
             var footprint = EffectiveFootprint(SelectedStall);
             bool affordable = _waves == null || _waves.CanAfford(SelectedStall.cost);
-            bool valid = grid.Model.CanPlace(cell, footprint, out _) && affordable;
-            ghost.Show(grid.Model.FootprintCenterWorld(cell, footprint), StallSize(footprint), valid, Facing, AttackRange);
+            bool facesAisle = grid.Model.HasAisleInFront(cell, footprint, Facing); // solo mirando a un camino
+            bool inZone = territory == null || territory.CanBuild(Owner.Player, cell, footprint, out _); // zona propia/adyacente
+            bool valid = grid.Model.CanPlace(cell, footprint, out _) && affordable && facesAisle && inZone;
+            var sprite = footprint == Vector2Int.one ? grid.StallSpriteFor(Owner.Player, Facing) : null;
+            ghost.Show(grid.Model.FootprintCenterWorld(cell, footprint), StallSize(footprint), valid, Facing, AttackRange, sprite);
 
             if (valid && mouse.leftButton.wasPressedThisFrame)
                 DoPlace(cell, footprint, Facing, SelectedStall);

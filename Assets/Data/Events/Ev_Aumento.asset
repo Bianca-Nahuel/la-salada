@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Ev_Aumento
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.GameEvent
   id: ev_aumento
-  title: Mejores sueldos!
+  title: "\xA1Mejores sueldos!"
   speaker: {fileID: 11400000, guid: ebb13c032a1ec9f45a1f737e7c4eb783, type: 2}
   description: Tus empleados piden un aumento.
   mandatory: 0
@@ -29,7 +29,7 @@ MonoBehaviour:
   options:
   - id: ev_aumento_opt_dar
     label: Dar aumento
-    outcome:
+    outcome: 
     hostility: 0
     reputation: 0
     happiness: 10
