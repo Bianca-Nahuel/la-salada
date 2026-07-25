@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a4b9b9cde64d984db7782bf255b0d6c, type: 3}
+  m_Name: Ev_Feria
+  m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.GameEvent
+  title: Feria especial
+  speaker: {fileID: 11400000, guid: da423fb62ad266048a8b445a467db8ac, type: 2}
+  description: Se viene un finde con mucha gente en La Salada.
+  mandatory: 0
+  repeatable: 0
+  conditions:
+  - type: 1
+    intValue: 3
+    value: 1
+    meter: 0
+    otherEvent: {fileID: 0}
+  - type: 2
+    intValue: 0
+    value: 0.5
+    meter: 0
+    otherEvent: {fileID: 0}
+  options:
+  - label: Invertir en promocion
+    outcome: 
+    hostility: 0
+    reputation: 0
+    happiness: 0
+    profit: 0
+    money: -30
+    special: 2
+    specialMagnitude: 1.6
+    specialWaves: 2
+  - label: Aprovechar sin gastar
+    outcome: 
+    hostility: 0
+    reputation: 0
+    happiness: 0
+    profit: 0
+    money: 0
+    special: 3
+    specialMagnitude: 1.3
+    specialWaves: 1

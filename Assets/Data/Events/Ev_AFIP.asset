@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a4b9b9cde64d984db7782bf255b0d6c, type: 3}
+  m_Name: Ev_AFIP
+  m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.GameEvent
+  title: Control de la AFIP
+  speaker: {fileID: 11400000, guid: 6381764aa56e03842bade0c1abb670eb, type: 2}
+  description: Un inspector aparece pidiendo los papeles del puesto.
+  mandatory: 0
+  repeatable: 0
+  conditions:
+  - type: 0
+    intValue: 2
+    value: 1
+    meter: 0
+    otherEvent: {fileID: 0}
+  - type: 2
+    intValue: 0
+    value: 0.6
+    meter: 0
+    otherEvent: {fileID: 0}
+  options:
+  - label: Pagar una coima
+    outcome: 
+    hostility: -10
+    reputation: 0
+    happiness: 0
+    profit: 0
+    money: -50
+    special: 0
+    specialMagnitude: 1
+    specialWaves: 0
+  - label: Mostrar papeles truchos
+    outcome: 
+    hostility: 0
+    reputation: -8
+    happiness: -5
+    profit: 0
+    money: 0
+    special: 0
+    specialMagnitude: 1
+    specialWaves: 0
+  - label: Echarlo a los gritos
+    outcome: 
+    hostility: 15
+    reputation: 5
+    happiness: 0
+    profit: 0
+    money: 0
+    special: 0
+    specialMagnitude: 1
+    specialWaves: 0
