@@ -45,7 +45,10 @@ namespace Salada.Game
 
         [Header("Paciencia (oculta)")]
         [SerializeField] private float patienceMax = 100f;
-        [SerializeField] private float dailyDecayBase = 6f;
+        [Tooltip("Recuperacion base de paciencia por dia (si estas tranquilo, se recupera sola).")]
+        [SerializeField] private float patienceRegenPerDay = 5f;
+        [Tooltip("Decaimiento base por dia; escala con la hostilidad y la diferencia de poder (en conflicto baja rapido).")]
+        [SerializeField] private float dailyDecayBase = 10f;
         [SerializeField] private float warnThreshold = 30f;
         [SerializeField] private float attackThreshold = 0f;
         [SerializeField] private float stealDecay = 4f;
@@ -268,7 +271,9 @@ namespace Salada.Game
                 Owner rival = Rival(st);
                 int gap = PowerOf(zone, rival) - PowerOf(zone, Owner.Player);
                 float gapMult = Mathf.Clamp(1f + powerGapK * gap / Mathf.Max(1f, powerScale), 0.3f, 2.5f);
-                AddPatience(zone, -(dailyDecayBase * hostFactor * gapMult));
+                // balance diario: regenera si estas tranquilo (poca hostilidad), baja rapido en conflicto
+                float decay = dailyDecayBase * hostFactor * gapMult;
+                AddPatience(zone, patienceRegenPerDay - decay);
             }
             EvaluateThresholds();
             ResolveRivalDisputes();

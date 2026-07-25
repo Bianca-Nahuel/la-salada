@@ -19,9 +19,9 @@ namespace Salada.Combat
 
         [Header("Oleadas")]
         [Tooltip("Clientes de la primera oleada (numero fijo, no aleatorio).")]
-        public int baseClients = 6;
+        public int baseClients = 12;
         [Tooltip("Clientes extra por cada oleada que pasa.")]
-        public int perWaveIncrement = 2;
+        public int perWaveIncrement = 3;
         [Tooltip("Duracion real de la oleada a x1 (las 4 horas). Los clientes se reparten en este tiempo.")]
         public float waveDuration = 45f;
 
@@ -31,6 +31,18 @@ namespace Salada.Combat
         public float clientSize = 0.5f;
         public Color clientColor = new Color(0.15f, 0.35f, 0.95f);
         public float buyPauseDuration = 1f;
+        [Tooltip("Atencion que pierde un cliente por segundo si ningun puesto le pega.")]
+        public float convinceDecayPerSec = 5f;
+
+        [Header("Comportamiento de clientes")]
+        [Tooltip("Prob. de que un cliente vaya rapido al centro y despues recorra lento (no solo campear salidas).")]
+        [Range(0f, 1f)] public float centerRusherChance = 0.35f;
+        [Tooltip("Prob. de que un cliente 'directo' tome el recorrido largo (si no, el corto).")]
+        [Range(0f, 1f)] public float longPathChance = 0.45f;
+        [Tooltip("Multiplicador de velocidad en el tramo rapido (hasta el centro).")]
+        public float rushSpeedMult = 2.2f;
+        [Tooltip("Multiplicador de velocidad en el tramo lento (despues del centro).")]
+        public float slowSpeedMult = 0.55f;
 
         [Header("Economia")]
         public int startingMoney = 150;
@@ -234,24 +246,82 @@ namespace Salada.Combat
 
         void SpawnClient()
         {
-            List<Vector2Int> path = null;
-            for (int attempt = 0; attempt < 12 && path == null; attempt++)
-            {
-                var start = _openings[NextInt(_openings.Count)];
-                var goal = _openings[NextInt(_openings.Count)];
-                if (goal == start) continue;
-                path = grid.Model.FindAislePath(start, goal);
-            }
-            if (path == null || path.Count < 2) return;
+            var start = _openings[NextInt(_openings.Count)];
+            List<Vector2Int> cells;
+            int rushUntil = 0;
+            bool rusher = _openings.Count >= 2 && NextFloat() < centerRusherChance;
 
-            var worldPath = new List<Vector3>(path.Count);
-            foreach (var c in path) { var wc = grid.Model.CellToWorldCenter(c); worldPath.Add(new Vector3(wc.x, wc.y, 0f)); }
+            if (rusher)
+            {
+                // va rapido al centro y despues recorre lento hasta una salida (no solo campear salidas)
+                var center = grid.Model.NearestAisleCell(MapCenterWorld());
+                var exit = PickDifferentOpening(start);
+                var p1 = grid.Model.FindAislePath(start, center);
+                var p2 = grid.Model.FindAislePath(center, exit);
+                if (p1 == null || p2 == null || p1.Count < 1) { rusher = false; cells = DirectPath(start); }
+                else
+                {
+                    cells = new List<Vector2Int>(p1);
+                    for (int i = 1; i < p2.Count; i++) cells.Add(p2[i]);
+                    rushUntil = p1.Count; // waypoints hasta el centro = tramo rapido
+                }
+            }
+            else cells = DirectPath(start);
+
+            if (cells == null || cells.Count < 2) return;
+
+            var worldPath = new List<Vector3>(cells.Count);
+            foreach (var c in cells) { var wc = grid.Model.CellToWorldCenter(c); worldPath.Add(new Vector3(wc.x, wc.y, 0f)); }
 
             var go = new GameObject("Client");
             go.transform.SetParent(_clientsParent, false);
             var client = go.AddComponent<Client>();
             client.Init(grid, worldPath, clientSpeed, convinceThreshold, buyPauseDuration, clientSize, clientColor,
-                OnConverted, OnEscaped);
+                convinceDecayPerSec, OnConverted, OnEscaped);
+            if (rusher) client.SetRush(rushUntil, clientSpeed * rushSpeedMult, clientSpeed * slowSpeedMult);
+        }
+
+        /// <summary>Genera un cliente ya mismo (para testeo).</summary>
+        public void DebugSpawnClient() => SpawnClient();
+
+        /// <summary>Recorrido directo boca->boca, corto o largo (segun longPathChance).</summary>
+        List<Vector2Int> DirectPath(Vector2Int start)
+        {
+            bool wantLong = NextFloat() < longPathChance;
+            for (int attempt = 0; attempt < 12; attempt++)
+            {
+                var goal = PickGoal(start, wantLong);
+                if (goal == start) continue;
+                var path = grid.Model.FindAislePath(start, goal);
+                if (path != null && path.Count >= 2) return path;
+            }
+            return null;
+        }
+
+        /// <summary>Boca destino distinta a start: la mas lejana (largo) o la mas cercana (corto), con algo de azar.</summary>
+        Vector2Int PickGoal(Vector2Int start, bool wantLong)
+        {
+            Vector2Int best = start; int bestD = wantLong ? -1 : int.MaxValue;
+            for (int i = 0; i < 4; i++)
+            {
+                var o = _openings[NextInt(_openings.Count)];
+                if (o == start) continue;
+                int d = Manhattan(o, start);
+                if (wantLong ? d > bestD : d < bestD) { bestD = d; best = o; }
+            }
+            return best == start ? PickDifferentOpening(start) : best;
+        }
+
+        Vector2Int PickDifferentOpening(Vector2Int start)
+        {
+            for (int i = 0; i < 12; i++) { var o = _openings[NextInt(_openings.Count)]; if (o != start) return o; }
+            return start;
+        }
+
+        Vector2 MapCenterWorld()
+        {
+            var m = grid.Model;
+            return new Vector2(m.Origin.x + m.Width * m.CellSize * 0.5f, m.Origin.y + m.Height * m.CellSize * 0.5f);
         }
 
         void OnConverted(Client c, Owner winner)
@@ -313,9 +383,10 @@ namespace Salada.Combat
             _pendingExpansion.TryGetValue(owner, out int n);
             _expansionsDone.TryGetValue(owner, out int done);
             // cada expansion cuesta mas ventas que la anterior (ritmo por faccion)
-            while (true)
+            int safety = 0;
+            while (safety++ < 200)
             {
-                int need = t.baseCost + t.growth * done;
+                int need = Mathf.Max(1, t.baseCost + t.growth * done); // nunca 0 -> evita loop infinito
                 if (n < need) break;
                 if (!ExpandFaction(owner)) break; // sin celda valida -> no gastar las ventas
                 n -= need;
@@ -330,7 +401,7 @@ namespace Salada.Combat
             var cell = FindExpansionCell(owner);
             if (!cell.HasValue) return false;
             var center = grid.Model.FootprintCenterWorld(cell.Value, Vector2Int.one);
-            var facing = grid.Model.NearestAisleDirection(center);
+            var facing = grid.Model.FacingToAisle(cell.Value);
             var stall = grid.SpawnStall(cell.Value, Vector2Int.one, owner, facing, expansionStallData);
             if (stall == null) return false;
             FloatingText.Spawn(center, owner == Owner.Enemy ? "Rival rojo +1" : "Rival amarillo +1", grid.ColorFor(owner));
@@ -358,7 +429,7 @@ namespace Salada.Combat
         {
             var cell = FindExpansionCell(owner);
             if (!cell.HasValue) return false;
-            var facing = grid.Model.NearestAisleDirection(grid.Model.FootprintCenterWorld(cell.Value, Vector2Int.one));
+            var facing = grid.Model.FacingToAisle(cell.Value);
             return grid.SpawnStall(cell.Value, Vector2Int.one, owner, facing, expansionStallData) != null;
         }
 
