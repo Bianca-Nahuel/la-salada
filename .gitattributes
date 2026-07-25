@@ -1,0 +1,45 @@
+# Normalizar finales de linea
+* text=auto
+
+# Codigo fuente (lo que GitHub debe contar como lenguaje)
+*.cs text diff=csharp
+
+# Archivos de Unity (YAML/data): no contarlos para el lenguaje y colapsarlos en diffs
+*.meta            linguist-generated
+*.unity           linguist-generated
+*.asset           linguist-generated
+*.prefab          linguist-generated
+*.mat             linguist-generated
+*.anim            linguist-generated
+*.controller      linguist-generated
+*.overrideController linguist-generated
+*.mask            linguist-generated
+*.playable        linguist-generated
+*.preset          linguist-generated
+*.renderTexture   linguist-generated
+*.spriteatlas     linguist-generated
+*.terrainlayer    linguist-generated
+*.mixer           linguist-generated
+*.shadervariants  linguist-generated
+*.guiskin         linguist-generated
+*.fontsettings    linguist-generated
+*.flare           linguist-generated
+*.giparams        linguist-generated
+*.brush           linguist-generated
+*.asmdef          linguist-generated
+*.asmref          linguist-generated
+*.inputactions    linguist-generated
+*.wlt             linguist-generated
+ProjectSettings/** linguist-generated
+Packages/packages-lock.json linguist-generated
+
+# Binarios
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.psd binary
+*.tga binary
+*.ico binary
+*.dll binary
+*.unitypackage binary
