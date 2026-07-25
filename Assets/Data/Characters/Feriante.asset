@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7353cdb63b5418b4787653889b9bc67c, type: 3}
-  m_Name: Dona_Rosa
+  m_Name: Feriante
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.EventCharacter
-  characterName: "Do\xF1a Rosa"
-  color: {r: 0.95, g: 0.5, b: 0.8, a: 1}
+  characterName: Feriante
+  color: {r: 0.75, g: 0.55, b: 0.25, a: 1}

@@ -12,35 +12,57 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a4b9b9cde64d984db7782bf255b0d6c, type: 3}
   m_Name: Ev_Trucha
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.GameEvent
+  id: ev_trucha
   title: Mercaderia trucha
   speaker: {fileID: 11400000, guid: 480cd0a6b5cdac24c8e66383796bd68a, type: 2}
-  description: Un proveedor ofrece productos falsificados a mitad de precio.
+  description: Hubo un aumento en los costos, pero un proveedor ofrece productos
+    (mas) truchos a mitad de precio.
   mandatory: 0
-  repeatable: 0
+  repeatable: 1
   conditions:
-  - type: 2
-    intValue: 0
-    value: 0.5
+  - type: 0
+    intValue: 2
+    value: 1
     meter: 0
-    otherEvent: {fileID: 0}
+    mode: 1
+    events: []
+    options: []
   options:
-  - label: Comprar todo
-    outcome: 
+  - id: ev_trucha_opt_dametodo
+    label: Dame todo
+    outcome:
     hostility: 0
     reputation: -12
     happiness: 0
     profit: 15
     money: 0
+    moneyPerStall: 0
+    salaryIncreasePercent: 0
+    destroyBiggestStall: 0
+    triggerGameOver: 0
     special: 0
     specialMagnitude: 1
+    special2: 0
+    specialMagnitude2: 1
     specialWaves: 0
-  - label: Rechazar, somos serios
-    outcome: 
+    specialOneDayOnly: 0
+    specialPermanent: 0
+  - id: ev_trucha_opt_rechazar
+    label: Rechazar, somos serios
+    outcome:
     hostility: 0
     reputation: 8
     happiness: 0
     profit: -5
     money: 0
+    moneyPerStall: 0
+    salaryIncreasePercent: 0
+    destroyBiggestStall: 0
+    triggerGameOver: 0
     special: 0
     specialMagnitude: 1
+    special2: 0
+    specialMagnitude2: 1
     specialWaves: 0
+    specialOneDayOnly: 0
+    specialPermanent: 0

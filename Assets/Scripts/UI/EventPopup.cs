@@ -9,7 +9,8 @@ namespace Salada.UI
 {
     /// <summary>
     /// Modal de evento: backdrop que bloquea + panel con el personaje que habla, titulo,
-    /// descripcion y opciones. Al elegir una opcion muestra su dialogo final y "Continuar".
+    /// descripcion y opciones. Al elegir una opcion muestra su dialogo final y "Continuar"
+    /// (o la pantalla de Game Over si la opcion elegida termina la partida).
     /// </summary>
     public class EventPopup : MonoBehaviour
     {
@@ -23,11 +24,13 @@ namespace Salada.UI
 
         private WaveManager _waves;
         private BusinessMeters _meters;
+        private GameOverController _gameOver;
 
-        public void Init(WaveManager waves, BusinessMeters meters)
+        public void Init(WaveManager waves, BusinessMeters meters, GameOverController gameOver)
         {
             _waves = waves;
             _meters = meters;
+            _gameOver = gameOver;
         }
 
         void Start()
@@ -85,27 +88,36 @@ namespace Salada.UI
                 {
                     int idx = i;
                     var o = _ev.options[i];
-                    bool canAfford = !WouldGoNegative(o);
+                    bool allowed = !WouldBreakLimits(o);
                     string label = o.label;
+
+                    int totalMoney = TotalMoney(o);
+                    if (totalMoney != 0) label += $"\n(${(totalMoney > 0 ? "+" : "")}{totalMoney})";
 #if UNITY_EDITOR
                     label += $"\n<{Preview(o)}>";
 #endif
-                    AddButton(label, new Color(0.2f, 0.5f, 0.65f), () => ChooseOption(idx), canAfford);
+                    AddButton(label, new Color(0.2f, 0.5f, 0.65f), () => ChooseOption(idx), allowed);
                 }
         }
 
-        bool WouldGoNegative(EventOption o)
+        int TotalMoney(EventOption o) =>
+            o.money + (o.moneyPerStall != 0 && _waves != null ? o.moneyPerStall * _waves.PlayerStallCount() : 0);
+
+        bool WouldBreakLimits(EventOption o)
         {
-            if (_waves != null && o.money != 0 && _waves.Money + o.money < 0) return true;
+            int totalMoney = TotalMoney(o);
+            if (totalMoney != 0 && _waves != null && _waves.Money + totalMoney < 0) return true;
             if (_meters != null)
             {
-                if (o.hostility != 0 && _meters.Get(MeterType.Hostility) + o.hostility < 0) return true;
-                if (o.reputation != 0 && _meters.Get(MeterType.Reputation) + o.reputation < 0) return true;
-                if (o.happiness != 0 && _meters.Get(MeterType.Happiness) + o.happiness < 0) return true;
-                if (o.profit != 0 && _meters.Get(MeterType.Profit) + o.profit < 0) return true;
+                if (o.hostility != 0 && OutOfRange(_meters.Get(MeterType.Hostility) + o.hostility)) return true;
+                if (o.reputation != 0 && OutOfRange(_meters.Get(MeterType.Reputation) + o.reputation)) return true;
+                if (o.happiness != 0 && OutOfRange(_meters.Get(MeterType.Happiness) + o.happiness)) return true;
+                if (o.profit != 0 && OutOfRange(_meters.Get(MeterType.Profit) + o.profit)) return true;
             }
             return false;
         }
+
+        static bool OutOfRange(float v) => v < 0f || v > 100f;
 
         void ChooseOption(int i)
         {
@@ -117,13 +129,26 @@ namespace Salada.UI
         {
             Clear();
             AddSpeaker(_ev.speaker);
-            var outcome = _ev.options[i].outcome;
+            var opt = _ev.options[i];
+            var outcome = opt.outcome;
             AddText(string.IsNullOrEmpty(outcome) ? "..." : outcome, 18, new Color(0.9f, 0.92f, 0.96f), FontStyle.Italic, 60, TextAnchor.UpperLeft);
-            AddButton("Continuar", new Color(0.25f, 0.6f, 0.35f), () =>
+
+            if (opt.triggerGameOver)
             {
-                _root.SetActive(false);
-                _onClose?.Invoke();
-            });
+                AddButton("...", new Color(0.5f, 0.2f, 0.2f), () =>
+                {
+                    _root.SetActive(false);
+                    _gameOver?.Show(outcome);
+                });
+            }
+            else
+            {
+                AddButton("Continuar", new Color(0.25f, 0.6f, 0.35f), () =>
+                {
+                    _root.SetActive(false);
+                    _onClose?.Invoke();
+                });
+            }
         }
 
         // ---- helpers ----
@@ -182,8 +207,13 @@ namespace Salada.UI
             if (o.happiness != 0) parts.Add($"Felic {Signed(o.happiness)}");
             if (o.profit != 0) parts.Add($"Profit {Signed(o.profit)}");
             if (o.money != 0) parts.Add($"${(o.money > 0 ? "+" : "")}{o.money}");
-            if (o.special != EffectType.None && o.specialWaves > 0)
-                parts.Add($"{GameEffects.Label(o.special, o.specialMagnitude)} x{o.specialWaves}");
+            if (o.moneyPerStall != 0) parts.Add($"${(o.moneyPerStall > 0 ? "+" : "")}{o.moneyPerStall} x puesto");
+            if (o.salaryIncreasePercent != 0) parts.Add($"Sueldo x puesto {(o.salaryIncreasePercent > 0 ? "+" : "")}{o.salaryIncreasePercent:0.#%}");
+            if (o.destroyBiggestStall) parts.Add("Destruye el puesto mas grande");
+            if (o.triggerGameOver) parts.Add("GAME OVER");
+            string dur = o.specialPermanent ? "permanente" : (o.specialOneDayOnly ? "hoy" : $"x{o.specialWaves}");
+            if (o.special != EffectType.None) parts.Add($"{GameEffects.Label(o.special, o.specialMagnitude)} ({dur})");
+            if (o.special2 != EffectType.None) parts.Add($"{GameEffects.Label(o.special2, o.specialMagnitude2)} ({dur})");
             return parts.Count == 0 ? "sin efecto" : string.Join("   ", parts);
         }
 

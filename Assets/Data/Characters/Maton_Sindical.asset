@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7353cdb63b5418b4787653889b9bc67c, type: 3}
-  m_Name: Dona_Rosa
+  m_Name: Maton_Sindical
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.EventCharacter
-  characterName: "Do\xF1a Rosa"
-  color: {r: 0.95, g: 0.5, b: 0.8, a: 1}
+  characterName: Maton Sindical
+  color: {r: 0.5, g: 0.15, b: 0.15, a: 1}

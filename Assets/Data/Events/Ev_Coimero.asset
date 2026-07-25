@@ -10,32 +10,45 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8a4b9b9cde64d984db7782bf255b0d6c, type: 3}
-  m_Name: Ev_AFIP
+  m_Name: Ev_Coimero
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.GameEvent
-  id: ev_afip
-  title: Cayo la AFIP
-  speaker: {fileID: 11400000, guid: 6381764aa56e03842bade0c1abb670eb, type: 2}
-  description: Detectaron que el 100% de tus empleados estan en negro y el 0% de
-    tus ventas, declaradas.
+  id: ev_coimero
+  title: Asi que sos coimero?
+  speaker: {fileID: 11400000, guid: 00112233445566778899aabbccddeef3, type: 2}
+  description: Al parecer todos quieren agarrar del tarro (o cerrar tu puestito,
+    por supuesto).
   mandatory: 0
   repeatable: 0
   conditions:
   - type: 0
-    intValue: 2
+    intValue: 8
     value: 1
     meter: 0
     mode: 1
     events: []
     options: []
+  - type: 6
+    intValue: 0
+    value: 1
+    meter: 0
+    mode: 0
+    events: []
+    options:
+    - gameEvent: {fileID: 11400000, guid: 18a9bfa674fab0d4aad52795ec10c21a, type: 2}
+      optionId: ev_afip_opt_coimear
+    - gameEvent: {fileID: 11400000, guid: 0123456789abcdef0123456789abcde3, type: 2}
+      optionId: ev_lanec_opt_coimear
+    - gameEvent: {fileID: 11400000, guid: 0123456789abcdef0123456789abcde2, type: 2}
+      optionId: ev_qap_opt_coimear_maton
   options:
-  - id: ev_afip_opt_coimear
+  - id: ev_coimero_opt_coimear
     label: Coimear
     outcome:
     hostility: 0
     reputation: 0
     happiness: 0
     profit: 0
-    money: -40
+    money: -80
     moneyPerStall: 0
     salaryIncreasePercent: 0
     destroyBiggestStall: 0
@@ -47,13 +60,13 @@ MonoBehaviour:
     specialWaves: 0
     specialOneDayOnly: 0
     specialPermanent: 0
-  - id: ev_afip_opt_truchos
-    label: Mostrar papeles truchos
-    outcome:
+  - id: ev_coimero_opt_porcentaje
+    label: Dar porcentaje de las ventas
+    outcome: Interesante...
     hostility: 0
-    reputation: -10
-    happiness: -5
-    profit: 0
+    reputation: 0
+    happiness: 0
+    profit: -10
     money: 0
     moneyPerStall: 0
     salaryIncreasePercent: 0
@@ -66,18 +79,18 @@ MonoBehaviour:
     specialWaves: 0
     specialOneDayOnly: 0
     specialPermanent: 0
-  - id: ev_afip_opt_gritos
-    label: Echarlos a los gritos
-    outcome:
+  - id: ev_coimero_opt_negar
+    label: Negarse
+    outcome: Me va a tener que acompanar.
     hostility: 0
-    reputation: -15
+    reputation: 0
     happiness: 0
     profit: 0
     money: 0
     moneyPerStall: 0
     salaryIncreasePercent: 0
     destroyBiggestStall: 0
-    triggerGameOver: 0
+    triggerGameOver: 1
     special: 0
     specialMagnitude: 1
     special2: 0

@@ -12,40 +12,75 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a4b9b9cde64d984db7782bf255b0d6c, type: 3}
   m_Name: Ev_Feria
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.GameEvent
-  title: Feria especial
+  id: ev_feria
+  title: Finde largo
   speaker: {fileID: 11400000, guid: da423fb62ad266048a8b445a467db8ac, type: 2}
-  description: Se viene un finde con mucha gente en La Salada.
+  description: Se viene mucha gente. Podemos aprovechar para vender mas.
   mandatory: 0
-  repeatable: 0
+  repeatable: 1
   conditions:
-  - type: 1
-    intValue: 3
+  - type: 0
+    intValue: 2
     value: 1
     meter: 0
-    otherEvent: {fileID: 0}
-  - type: 2
-    intValue: 0
-    value: 0.5
-    meter: 0
-    otherEvent: {fileID: 0}
+    mode: 1
+    events: []
+    options: []
   options:
-  - label: Invertir en promocion
-    outcome: 
+  - id: ev_feria_opt_publicidad
+    label: Invertir en publicidad
+    outcome:
     hostility: 0
     reputation: 0
     happiness: 0
     profit: 0
-    money: -30
-    special: 2
-    specialMagnitude: 1.6
-    specialWaves: 2
-  - label: Aprovechar sin gastar
-    outcome: 
+    money: -50
+    moneyPerStall: 0
+    salaryIncreasePercent: 0
+    destroyBiggestStall: 0
+    triggerGameOver: 0
+    special: 1
+    specialMagnitude: 1.5
+    special2: 0
+    specialMagnitude2: 1
+    specialWaves: 0
+    specialOneDayOnly: 1
+    specialPermanent: 0
+  - id: ev_feria_opt_promo2x1
+    label: Promociones 2x1
+    outcome:
     hostility: 0
     reputation: 0
     happiness: 0
     profit: 0
     money: 0
-    special: 3
-    specialMagnitude: 1.3
-    specialWaves: 1
+    moneyPerStall: 0
+    salaryIncreasePercent: 0
+    destroyBiggestStall: 0
+    triggerGameOver: 0
+    special: 1
+    specialMagnitude: 1.5
+    special2: 3
+    specialMagnitude2: 0.66
+    specialWaves: 0
+    specialOneDayOnly: 1
+    specialPermanent: 0
+  - id: ev_feria_opt_negar
+    label: Negarse
+    outcome:
+    hostility: 0
+    reputation: 0
+    happiness: 0
+    profit: 0
+    money: 0
+    moneyPerStall: 0
+    salaryIncreasePercent: 0
+    destroyBiggestStall: 0
+    triggerGameOver: 0
+    special: 0
+    specialMagnitude: 1
+    special2: 0
+    specialMagnitude2: 1
+    specialWaves: 0
+    specialOneDayOnly: 0
+    specialPermanent: 0

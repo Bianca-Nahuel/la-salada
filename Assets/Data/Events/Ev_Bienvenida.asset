@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a4b9b9cde64d984db7782bf255b0d6c, type: 3}
   m_Name: Ev_Bienvenida
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.GameEvent
+  id: ev_bienvenida
   title: Primer dia en La Salada
   speaker: {fileID: 11400000, guid: da423fb62ad266048a8b445a467db8ac, type: 2}
   description: Bienvenido, pibe. Aca se labura duro pero se hace la diferencia. Cuidate
@@ -23,15 +24,26 @@ MonoBehaviour:
     intValue: 1
     value: 1
     meter: 0
-    otherEvent: {fileID: 0}
+    mode: 1
+    events: []
+    options: []
   options:
-  - label: A darle
-    outcome: Asi se habla. Suerte con el puesto.
+  - id: ev_bienvenida_opt_cumbia
+    label: Mandale cumbia
+    outcome: Suerte.
     hostility: 0
     reputation: 0
     happiness: 0
     profit: 0
     money: 0
+    moneyPerStall: 0
+    salaryIncreasePercent: 0
+    destroyBiggestStall: 0
+    triggerGameOver: 0
     special: 0
     specialMagnitude: 1
+    special2: 0
+    specialMagnitude2: 1
     specialWaves: 0
+    specialOneDayOnly: 0
+    specialPermanent: 0

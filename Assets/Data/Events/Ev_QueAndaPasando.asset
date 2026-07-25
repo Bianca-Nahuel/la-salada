@@ -10,24 +10,34 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8a4b9b9cde64d984db7782bf255b0d6c, type: 3}
-  m_Name: Ev_Aumento
+  m_Name: Ev_QueAndaPasando
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.GameEvent
-  id: ev_aumento
-  title: Mejores sueldos!
-  speaker: {fileID: 11400000, guid: ebb13c032a1ec9f45a1f737e7c4eb783, type: 2}
-  description: Tus empleados piden un aumento.
+  id: ev_que_anda_pasando
+  title: Que anda pasando, companero...
+  speaker: {fileID: 11400000, guid: 00112233445566778899aabbccddeef2, type: 2}
+  description: Vinieron a apretarte por no atender los reclamos salariales de tus
+    empleados.
   mandatory: 0
   repeatable: 0
   conditions:
   - type: 0
-    intValue: 2
+    intValue: 5
     value: 1
     meter: 0
     mode: 1
     events: []
     options: []
+  - type: 6
+    intValue: 0
+    value: 1
+    meter: 0
+    mode: 0
+    events: []
+    options:
+    - gameEvent: {fileID: 11400000, guid: 4c30bb86c720dc047867b20e1a32509b, type: 2}
+      optionId: ev_aumento_opt_negar
   options:
-  - id: ev_aumento_opt_dar
+  - id: ev_qap_opt_dar_aumento
     label: Dar aumento
     outcome:
     hostility: 0
@@ -46,12 +56,31 @@ MonoBehaviour:
     specialWaves: 0
     specialOneDayOnly: 0
     specialPermanent: 0
-  - id: ev_aumento_opt_negar
-    label: Negarse
-    outcome: Rata...
+  - id: ev_qap_opt_coimear_maton
+    label: Coimear maton para que no joda
+    outcome: Nos estamos entendiendo.
     hostility: 0
     reputation: 0
-    happiness: -15
+    happiness: -5
+    profit: 0
+    money: -100
+    moneyPerStall: 0
+    salaryIncreasePercent: 0
+    destroyBiggestStall: 0
+    triggerGameOver: 0
+    special: 0
+    specialMagnitude: 1
+    special2: 0
+    specialMagnitude2: 1
+    specialWaves: 0
+    specialOneDayOnly: 0
+    specialPermanent: 0
+  - id: ev_qap_opt_pararsele
+    label: Pararsele de mano
+    outcome: Ah, si? Ya vas a ver vos...
+    hostility: 0
+    reputation: 0
+    happiness: -10
     profit: 0
     money: 0
     moneyPerStall: 0

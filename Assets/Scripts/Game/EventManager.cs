@@ -2,31 +2,45 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Salada.Combat;
+using Salada.Placement;
 using Salada.UI;
 
 namespace Salada.Game
 {
     /// <summary>
-    /// Cada dia evalua las condiciones de todos los eventos y muestra los que corresponden:
-    /// todos los obligatorios que cumplan, y como maximo 1 opcional (elegido por probabilidad).
-    /// Aplica las consecuencias de la opcion elegida y muestra su dialogo final.
+    /// Los eventos siempre se disparan al final de un dia. Justo antes de elegir el evento del
+    /// dia se actualizan: (1) la cola de obligatorios pendientes (eventos obligatorios cuyas
+    /// condiciones ya se cumplen) y (2) el pool de aleatorios disponibles (no obligatorios cuyas
+    /// condiciones ya se cumplen). Si hay obligatorios pendientes se disparan hasta 2 ese dia (el
+    /// resto queda pendiente para los dias siguientes); si no hay ninguno, se elige 1 evento al
+    /// azar del pool. Se aplican las consecuencias de la opcion elegida y se muestra su dialogo.
     /// </summary>
     public class EventManager : MonoBehaviour
     {
+        const int MaxMandatoryPerDay = 2;
+
         [SerializeField] private GameEvent[] events;
 
         private WaveManager _waves;
         private BusinessMeters _meters;
         private GameEffects _effects;
+        private GridManager _grid;
         private EventPopup _popup;
+        private GameOverController _gameOver;
 
         private readonly HashSet<GameEvent> _happened = new HashSet<GameEvent>();
-        private readonly Dictionary<GameEvent, int> _chosen = new Dictionary<GameEvent, int>();
-        private readonly Queue<GameEvent> _queue = new Queue<GameEvent>();
+        private readonly Dictionary<GameEvent, string> _chosenOptionId = new Dictionary<GameEvent, string>();
+
+        private readonly Queue<GameEvent> _mandatoryPending = new Queue<GameEvent>();
+        private readonly HashSet<GameEvent> _mandatoryPendingSet = new HashSet<GameEvent>();
+
+        private readonly List<GameEvent> _pool = new List<GameEvent>(); // aleatorios disponibles
+
+        private readonly Queue<GameEvent> _showQueue = new Queue<GameEvent>(); // eventos del dia a mostrar
         private bool _showing;
         private int _rng = 987654;
 
-        public bool IsEventPending => _showing || _queue.Count > 0;
+        public bool IsEventPending => _showing || _showQueue.Count > 0;
         public GameEvent[] Events { get => events; set => events = value; }
 
         void Start()
@@ -34,8 +48,11 @@ namespace Salada.Game
             _waves = FindFirstObjectByType<WaveManager>();
             _meters = FindFirstObjectByType<BusinessMeters>();
             _effects = FindFirstObjectByType<GameEffects>();
+            _grid = FindFirstObjectByType<GridManager>();
             _popup = FindFirstObjectByType<EventPopup>(FindObjectsInactive.Include);
-            if (_popup != null) _popup.Init(_waves, _meters);
+            _gameOver = FindFirstObjectByType<GameOverController>();
+            if (_gameOver == null) _gameOver = gameObject.AddComponent<GameOverController>();
+            if (_popup != null) _popup.Init(_waves, _meters, _gameOver);
             if (_waves != null) _waves.DayPassed += OnDayPassed;
         }
 
@@ -49,31 +66,69 @@ namespace Salada.Game
             if (events == null || _popup == null) return;
             int day = _waves != null ? _waves.Day : 1;
 
-            var mandatory = new List<GameEvent>();
-            var optional = new List<GameEvent>();
-            foreach (var ev in events)
+            UpdateMandatoryQueue(day);
+            UpdatePool(day);
+
+            int taken = 0;
+            while (taken < MaxMandatoryPerDay && _mandatoryPending.Count > 0)
             {
-                if (ev == null) continue;
-                if (!ev.repeatable && _happened.Contains(ev)) continue;
-                if (!ConditionsPassExceptProbability(ev, day)) continue;
-                (ev.mandatory ? mandatory : optional).Add(ev);
+                var ev = _mandatoryPending.Dequeue();
+                _mandatoryPendingSet.Remove(ev);
+                _showQueue.Enqueue(ev);
+                taken++;
             }
 
-            foreach (var ev in mandatory) _queue.Enqueue(ev);       // todos los obligatorios
-            var pick = PickOptional(optional);                       // 1 opcional por probabilidad
-            if (pick != null) _queue.Enqueue(pick);
+            if (taken == 0)
+            {
+                var pick = PickFromPool();
+                if (pick != null) _showQueue.Enqueue(pick);
+            }
 
             if (!_showing) ShowNext();
         }
 
+        // ---- Pool / cola de obligatorios ----
+
+        void UpdateMandatoryQueue(int day)
+        {
+            foreach (var ev in events)
+            {
+                if (ev == null || !ev.mandatory) continue;
+                if (!ev.repeatable && _happened.Contains(ev)) continue;
+                if (_mandatoryPendingSet.Contains(ev)) continue;
+                if (ConditionsPass(ev, day))
+                {
+                    _mandatoryPending.Enqueue(ev);
+                    _mandatoryPendingSet.Add(ev);
+                }
+            }
+        }
+
+        void UpdatePool(int day)
+        {
+            foreach (var ev in events)
+            {
+                if (ev == null || ev.mandatory) continue;
+                if (!ev.repeatable && _happened.Contains(ev)) continue;
+                if (_pool.Contains(ev)) continue;
+                if (ConditionsPass(ev, day))
+                    _pool.Add(ev);
+            }
+        }
+
+        GameEvent PickFromPool()
+        {
+            if (_pool.Count == 0) return null;
+            return _pool[NextInt(_pool.Count)];
+        }
+
         // ---- Condiciones ----
 
-        bool ConditionsPassExceptProbability(GameEvent ev, int day)
+        bool ConditionsPass(GameEvent ev, int day)
         {
             if (ev.conditions == null) return true;
             foreach (var c in ev.conditions)
-                if (c.type != ConditionType.Probability && !Pass(c, day))
-                    return false;
+                if (!Pass(c, day)) return false;
             return true;
         }
 
@@ -82,52 +137,57 @@ namespace Salada.Game
             switch (c.type)
             {
                 case ConditionType.DayAtLeast: return day >= c.intValue;
-                case ConditionType.DayEvery: return c.intValue > 0 && day % c.intValue == 0;
-                case ConditionType.Probability: return true; // se maneja aparte
-                case ConditionType.OptionChosen:
-                    return c.otherEvent != null && _chosen.TryGetValue(c.otherEvent, out int i) && i == c.intValue;
-                case ConditionType.EventHappened:
-                    return c.otherEvent != null && _happened.Contains(c.otherEvent);
-                case ConditionType.EventNotHappened:
-                    return c.otherEvent == null || !_happened.Contains(c.otherEvent);
-                case ConditionType.MeterAbove:
-                    return _meters != null && _meters.Get(c.meter) > c.value;
-                case ConditionType.MeterBelow:
-                    return _meters != null && _meters.Get(c.meter) < c.value;
+                case ConditionType.MoneyAbove: return _waves != null && _waves.Money > c.value;
+                case ConditionType.MoneyBelow: return _waves != null && _waves.Money < c.value;
+                case ConditionType.MeterAbove: return _meters != null && _meters.Get(c.meter) > c.value;
+                case ConditionType.MeterBelow: return _meters != null && _meters.Get(c.meter) < c.value;
+                case ConditionType.EventsHappened: return PassEventsHappened(c);
+                case ConditionType.OptionsChosen: return PassOptionsChosen(c);
                 default: return true;
             }
         }
 
-        float Probability(GameEvent ev)
+        bool PassEventsHappened(EventCondition c)
         {
-            float p = 1f;
-            if (ev.conditions != null)
-                foreach (var c in ev.conditions)
-                    if (c.type == ConditionType.Probability) p *= Mathf.Clamp01(c.value);
-            return p;
+            if (c.events == null || c.events.Count == 0) return true;
+            if (c.mode == ConditionMode.All)
+            {
+                foreach (var e in c.events)
+                    if (e == null || !_happened.Contains(e)) return false;
+                return true;
+            }
+            foreach (var e in c.events)
+                if (e != null && _happened.Contains(e)) return true;
+            return false;
         }
 
-        GameEvent PickOptional(List<GameEvent> list)
+        bool PassOptionsChosen(EventCondition c)
         {
-            if (list.Count == 0) return null;
-            // orden aleatorio y devolver el primero que gane su tirada -> a lo sumo 1 por dia
-            for (int i = list.Count - 1; i > 0; i--)
+            if (c.options == null || c.options.Count == 0) return true;
+            if (c.mode == ConditionMode.All)
             {
-                int j = NextInt(i + 1);
-                (list[i], list[j]) = (list[j], list[i]);
+                foreach (var r in c.options)
+                    if (!OptionWasChosen(r)) return false;
+                return true;
             }
-            foreach (var ev in list)
-                if (NextFloat() < Probability(ev)) return ev;
-            return null;
+            foreach (var r in c.options)
+                if (OptionWasChosen(r)) return true;
+            return false;
+        }
+
+        bool OptionWasChosen(EventOptionRef r)
+        {
+            if (r == null || r.gameEvent == null || string.IsNullOrEmpty(r.optionId)) return false;
+            return _chosenOptionId.TryGetValue(r.gameEvent, out var chosenId) && chosenId == r.optionId;
         }
 
         // ---- Mostrar / aplicar ----
 
         void ShowNext()
         {
-            if (_queue.Count == 0) { _showing = false; return; }
+            if (_showQueue.Count == 0) { _showing = false; return; }
             _showing = true;
-            var ev = _queue.Dequeue();
+            var ev = _showQueue.Dequeue();
             _popup.Show(ev, idx => Apply(ev, idx), ShowNext);
         }
 
@@ -143,11 +203,52 @@ namespace Salada.Game
                 _meters.Add(MeterType.Happiness, opt.happiness);
                 _meters.Add(MeterType.Profit, opt.profit);
             }
-            if (opt.money != 0 && _waves != null) _waves.AddMoney(opt.money);
-            if (_effects != null) _effects.AddEffect(opt.special, opt.specialMagnitude, opt.specialWaves);
+
+            int totalMoney = opt.money;
+            if (opt.moneyPerStall != 0 && _waves != null) totalMoney += opt.moneyPerStall * _waves.PlayerStallCount();
+            if (totalMoney != 0 && _waves != null) _waves.AddMoney(totalMoney);
+
+            if (opt.salaryIncreasePercent != 0f && _waves != null) _waves.IncreaseSalaryPerStall(opt.salaryIncreasePercent);
+            if (opt.destroyBiggestStall) DestroyBiggestPlayerStall();
+
+            if (_effects != null)
+            {
+                int duration = DurationFor(opt);
+                _effects.AddEffect(opt.special, opt.specialMagnitude, duration);
+                _effects.AddEffect(opt.special2, opt.specialMagnitude2, duration);
+            }
 
             _happened.Add(ev);
-            _chosen[ev] = optionIndex;
+            _chosenOptionId[ev] = opt.id;
+
+            if (!ev.mandatory && !ev.repeatable) _pool.Remove(ev);
+        }
+
+        int DurationFor(EventOption opt)
+        {
+            if (opt.specialPermanent) return int.MaxValue;
+            if (opt.specialOneDayOnly) return _waves != null ? _waves.wavesPerDay : opt.specialWaves;
+            return opt.specialWaves;
+        }
+
+        void DestroyBiggestPlayerStall()
+        {
+            if (_grid == null || _grid.Model == null) return;
+            PlacedStall biggest = null;
+            int bestArea = -1;
+            foreach (var s in _grid.Model.Stalls)
+            {
+                if (s.Owner != Owner.Player) continue;
+                int area = s.Footprint.x * s.Footprint.y;
+                if (area > bestArea || (area == bestArea && biggest != null && s.Cost > biggest.Cost))
+                {
+                    bestArea = area;
+                    biggest = s;
+                }
+            }
+            if (biggest == null) return;
+            var removed = _grid.Model.Remove(biggest.OriginCell);
+            if (removed?.View != null) Destroy(removed.View);
         }
 
         // ---- Debug ----
@@ -155,14 +256,14 @@ namespace Salada.Game
         public void DebugTrigger(int index)
         {
             if (events == null || events.Length == 0 || _popup == null) return;
-            _queue.Enqueue(events[Mathf.Clamp(index, 0, events.Length - 1)]);
+            _showQueue.Enqueue(events[Mathf.Clamp(index, 0, events.Length - 1)]);
             if (!_showing) ShowNext();
         }
 
         public void DebugTriggerEvent(GameEvent ev)
         {
             if (ev == null || _popup == null) return;
-            _queue.Enqueue(ev);
+            _showQueue.Enqueue(ev);
             if (!_showing) ShowNext();
         }
 
@@ -172,7 +273,5 @@ namespace Salada.Game
             int v = (_rng >> 16) & 0x7fff;
             return max <= 0 ? 0 : v % max;
         }
-
-        float NextFloat() => NextInt(10000) / 10000f;
     }
 }

@@ -10,33 +10,41 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8a4b9b9cde64d984db7782bf255b0d6c, type: 3}
-  m_Name: Ev_Aumento
+  m_Name: Ev_OjoConLaAFIP
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.GameEvent
-  id: ev_aumento
-  title: Mejores sueldos!
-  speaker: {fileID: 11400000, guid: ebb13c032a1ec9f45a1f737e7c4eb783, type: 2}
-  description: Tus empleados piden un aumento.
+  id: ev_ojo_con_la_afip
+  title: Ojo con la AFIP, nos vas a traer quilombo
+  speaker: {fileID: 11400000, guid: 00112233445566778899aabbccddeef1, type: 2}
+  description: Los demas feriantes te advierten que no te metas con la AFIP.
   mandatory: 0
   repeatable: 0
   conditions:
   - type: 0
-    intValue: 2
+    intValue: 4
     value: 1
     meter: 0
     mode: 1
     events: []
     options: []
+  - type: 5
+    intValue: 0
+    value: 1
+    meter: 0
+    mode: 1
+    events:
+    - {fileID: 11400000, guid: 18a9bfa674fab0d4aad52795ec10c21a, type: 2}
+    options: []
   options:
-  - id: ev_aumento_opt_dar
-    label: Dar aumento
+  - id: ev_ojo_opt_hago_lo_que_quiero
+    label: Yo hago lo que se me cante
     outcome:
-    hostility: 0
-    reputation: 0
-    happiness: 10
+    hostility: 10
+    reputation: 5
+    happiness: 0
     profit: 0
     money: 0
     moneyPerStall: 0
-    salaryIncreasePercent: 0.1
+    salaryIncreasePercent: 0
     destroyBiggestStall: 0
     triggerGameOver: 0
     special: 0
@@ -46,12 +54,12 @@ MonoBehaviour:
     specialWaves: 0
     specialOneDayOnly: 0
     specialPermanent: 0
-  - id: ev_aumento_opt_negar
-    label: Negarse
-    outcome: Rata...
-    hostility: 0
-    reputation: 0
-    happiness: -15
+  - id: ev_ojo_opt_mildis
+    label: Te pido mildis
+    outcome:
+    hostility: -10
+    reputation: -5
+    happiness: 0
     profit: 0
     money: 0
     moneyPerStall: 0

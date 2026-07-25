@@ -87,6 +87,10 @@ namespace Salada.Combat
 
         public void AddMoney(int amount) => Money += amount; // eventos (permite negativo)
 
+        /// <summary>Sube permanentemente el sueldo diario por puesto. Ej 0.1 = +10%.</summary>
+        public void IncreaseSalaryPerStall(float percent) =>
+            salaryPerStall = Mathf.Max(0, Mathf.RoundToInt(salaryPerStall * (1f + percent)));
+
         // ---- Fase / oleadas ----
 
         /// <summary>Arranca la proxima oleada (solo si estamos en Building).</summary>
