@@ -31,6 +31,13 @@ namespace Salada.Placement
         [TextArea(1, 30)]
         public string[] rows;
 
+        [Tooltip("Capa paralela de ZONAS (mismas dimensiones). Un char por celda = id de zona; '.' = sin zona. rows[0]=arriba.")]
+        [TextArea(1, 30)]
+        public string[] zoneRows;
+
+        [Tooltip("Zona donde arranca el jugador (puede construir ahi al inicio). '.' = ninguna.")]
+        public char playerHomeZone = '.';
+
         [Tooltip("(Opcional/legacy) puestos precolocados con StallData.")]
         public List<PrePlacedStall> prePlaced = new List<PrePlacedStall>();
 
@@ -40,6 +47,42 @@ namespace Salada.Placement
             if (rows == null || ri < 0 || ri >= rows.Length) return 'A';
             var row = rows[ri];
             return (row != null && x >= 0 && x < row.Length) ? row[x] : 'A';
+        }
+
+        // ---- Capa de zonas ----
+
+        public bool HasZoneLayer => zoneRows != null && zoneRows.Length == height;
+
+        /// <summary>Id de zona de una celda; '.' = sin zona.</summary>
+        public char ZoneAt(int x, int y)
+        {
+            int ri = height - 1 - y; // zoneRows[0] = fila de arriba
+            if (zoneRows == null || ri < 0 || ri >= zoneRows.Length) return '.';
+            var row = zoneRows[ri];
+            return (row != null && x >= 0 && x < row.Length) ? row[x] : '.';
+        }
+
+        /// <summary>Capa de zonas por celda ('.' = sin zona).</summary>
+        public char[,] BuildZones()
+        {
+            var zones = new char[width, height];
+            for (int x = 0; x < width; x++)
+                for (int y = 0; y < height; y++)
+                    zones[x, y] = ZoneAt(x, y);
+            return zones;
+        }
+
+        /// <summary>Ids de zona distintos presentes en el mapa (sin '.').</summary>
+        public List<char> ZoneIds()
+        {
+            var set = new List<char>();
+            for (int x = 0; x < width; x++)
+                for (int y = 0; y < height; y++)
+                {
+                    char z = ZoneAt(x, y);
+                    if (z != '.' && !set.Contains(z)) set.Add(z);
+                }
+            return set;
         }
 
         static bool IsFloor(char c) => c == 'P' || c == '#' || c == 'E' || (c >= '0' && c <= '9');

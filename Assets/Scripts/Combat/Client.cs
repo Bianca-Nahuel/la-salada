@@ -41,11 +41,16 @@ namespace Salada.Combat
 
         private State _state = State.Traveling;
         private bool _sold;
-        private Vector3 _approachPoint;
         private float _pauseTimer;
 
         public bool IsTargetable => !_sold;
         public float TotalConvince => _total;
+
+        /// <summary>Convencimiento acumulado por una faccion (para detectar robos de venta).</summary>
+        public float ConvinceBy(Owner o) => _byFaction.TryGetValue(o, out var v) ? v : 0f;
+
+        /// <summary>Puesto ganador de la venta (seteado al vender); null si aun no vendio.</summary>
+        public PlacedStall LastSaleStall { get; private set; }
 
         public void Init(GridManager grid, List<Vector3> path, float speed, float threshold, float pauseDuration,
             float size, Color baseColor, Action<Client, Owner> onConverted, Action<Client> onEscaped)
@@ -103,7 +108,7 @@ namespace Salada.Combat
             switch (_state)
             {
                 case State.Traveling: FollowPath(Escape); break;
-                case State.Approaching: MoveTo(_approachPoint, StartPause); break;
+                case State.Approaching: FollowPath(StartPause); break;
                 case State.Pausing:
                     _pauseTimer -= Time.deltaTime;
                     if (_pauseTimer <= 0f) BeginLeaving();
@@ -117,8 +122,6 @@ namespace Salada.Combat
             if (_path == null || _idx >= _path.Count) { onEnd(); return; }
             if (MoveStep(_path[_idx])) { _idx++; if (_idx >= _path.Count) onEnd(); }
         }
-
-        void MoveTo(Vector3 target, Action onArrive) { if (MoveStep(target)) onArrive(); }
 
         bool MoveStep(Vector3 target)
         {
@@ -180,21 +183,25 @@ namespace Salada.Combat
         {
             _sold = true;
             _body.color = _grid.ColorFor(winner);
+            LastSaleStall = BestStallOf(winner);   // antes del invoke: lo usa el detector de robos
             _onConverted?.Invoke(this, winner);
 
-            var stall = BestStallOf(winner);
-            if (stall != null) { _approachPoint = StallFrontPoint(stall); _state = State.Approaching; }
-            else BeginLeaving();
-        }
+            var stall = LastSaleStall;
+            if (stall == null) { BeginLeaving(); return; }
 
-        Vector3 StallFrontPoint(PlacedStall s)
-        {
-            Vector2 c = _grid.Model.FootprintCenterWorld(s.OriginCell, s.Footprint);
-            var f = s.Facing;
-            float cs = _grid.CellSize;
-            float halfDepth = (Mathf.Abs(f.x) > 0 ? s.Footprint.x : s.Footprint.y) * 0.5f * cs;
-            var p = c + new Vector2(f.x, f.y) * (halfDepth + 0.35f * cs);
-            return new Vector3(p.x, p.y, 0f);
+            // Caminar por el PISO hasta la celda frente al puesto (no cruza arena).
+            var front = _grid.Model.FrontCell(stall.OriginCell, stall.Footprint, stall.Facing);
+            if (!_grid.Model.IsAisle(front)) { StartPause(); return; } // fallback raro
+            var cur = _grid.Model.NearestAisleCell(transform.position);
+            var cells = _grid.Model.FindAislePath(cur, front);
+
+            var wp = new List<Vector3> { (Vector3)(Vector2)_grid.Model.CellToWorldCenter(cur) };
+            if (cells != null)
+                foreach (var c in cells) { var w = _grid.Model.CellToWorldCenter(c); wp.Add(new Vector3(w.x, w.y, 0f)); }
+
+            _path = wp;
+            _idx = 0;
+            _state = State.Approaching;
         }
 
         void StartPause() { _state = State.Pausing; _pauseTimer = _pauseDuration; }

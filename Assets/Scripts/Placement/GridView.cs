@@ -12,7 +12,6 @@ namespace Salada.Placement
     public class GridView : MonoBehaviour
     {
         [SerializeField] private int cellSortingOrder = 0;
-        [SerializeField] private int stallSortingOrder = 1;
 
         [Header("Tiles de pasillo (caminos)")]
         [SerializeField] private MapTileSet tileSet;                 // tiles elegibles por celda (digitos)

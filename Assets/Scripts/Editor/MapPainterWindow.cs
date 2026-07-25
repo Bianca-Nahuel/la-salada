@@ -10,9 +10,16 @@ namespace Salada.EditorTools
     /// </summary>
     public class MapPainterWindow : EditorWindow
     {
+        private enum PaintLayer { Terrain, Zones }
+
         private MapLayout map;
+        private MapLayout _lastMap;
+        private int _pendingW, _pendingH;
         private MapTileSet tileSet;
         private char brush = 'P';
+        private char zoneBrush = 'a';
+        private PaintLayer _layer = PaintLayer.Terrain;
+        private bool _showZonesInTerrain;
         private Vector2 scroll;
         private const float CELL = 24f;
         private GUIStyle _tag;
@@ -32,10 +39,15 @@ namespace Salada.EditorTools
                 return;
             }
 
+            // El tamano tipeado se guarda en campos de la ventana (si no, se re-lee de map.* cada
+            // repintado y "vuelve" a 16/13). Se reinicia solo al cambiar de mapa.
+            if (map != _lastMap) { _lastMap = map; _pendingW = map.width; _pendingH = map.height; }
+
             EditorGUILayout.BeginHorizontal();
-            int w = Mathf.Max(1, EditorGUILayout.IntField("Ancho", map.width));
-            int h = Mathf.Max(1, EditorGUILayout.IntField("Alto", map.height));
-            if (GUILayout.Button("Aplicar tamano", GUILayout.Width(120))) Resize(w, h);
+            _pendingW = Mathf.Max(1, EditorGUILayout.IntField("Ancho", _pendingW));
+            _pendingH = Mathf.Max(1, EditorGUILayout.IntField("Alto", _pendingH));
+            using (new EditorGUI.DisabledScope(_pendingW == map.width && _pendingH == map.height))
+                if (GUILayout.Button("Aplicar tamano", GUILayout.Width(120))) Resize(_pendingW, _pendingH);
             EditorGUILayout.EndHorizontal();
 
             if (tileSet == null)
@@ -46,6 +58,25 @@ namespace Salada.EditorTools
             tileSet = (MapTileSet)EditorGUILayout.ObjectField("Tile set (piso)", tileSet, typeof(MapTileSet), false);
 
             EditorGUILayout.Space(4);
+            _layer = (PaintLayer)GUILayout.Toolbar((int)_layer, new[] { "Terreno", "Zonas" });
+
+            if (_layer == PaintLayer.Terrain) DrawTerrainPalette();
+            else DrawZonePalette();
+
+            EditorGUILayout.Space(6);
+            DrawGrid();
+
+            EditorGUILayout.Space(4);
+            EditorGUILayout.HelpBox(
+                _layer == PaintLayer.Terrain
+                    ? "A=arena   P=piso   E=entrada/salida   R=rival rojo   Y=rival amarillo.   Click o arrastra para pintar."
+                    : "Pintá ZONAS (territorio). Cada zona es un id (a,b,c...). '.' = sin zona. Las facciones solo construyen en su zona o adyacentes.",
+                MessageType.None);
+            if (GUILayout.Button("Guardar")) { EditorUtility.SetDirty(map); AssetDatabase.SaveAssets(); }
+        }
+
+        void DrawTerrainPalette()
+        {
             EditorGUILayout.LabelField("Pincel", EditorStyles.boldLabel);
             EditorGUILayout.BeginHorizontal();
             BrushButton("Arena", 'A');
@@ -54,6 +85,7 @@ namespace Salada.EditorTools
             BrushButton("Rival Rojo", 'R');
             BrushButton("Rival Amar.", 'Y');
             EditorGUILayout.EndHorizontal();
+            _showZonesInTerrain = EditorGUILayout.ToggleLeft("Ver zonas tenues", _showZonesInTerrain);
 
             if (tileSet != null && tileSet.tiles != null && tileSet.tiles.Length > 0)
             {
@@ -73,16 +105,57 @@ namespace Salada.EditorTools
                 }
                 EditorGUILayout.EndHorizontal();
             }
+        }
 
-            EditorGUILayout.Space(6);
-            DrawGrid();
+        void DrawZonePalette()
+        {
+            EditorGUILayout.LabelField("Pincel de zona", EditorStyles.boldLabel);
 
-            EditorGUILayout.Space(4);
-            EditorGUILayout.HelpBox(
-                "A=arena (se colocan puestos)   P=piso (caminan los clientes)   E=entrada/salida (spawn/exit)\n" +
-                "R=rival rojo   Y=rival amarillo.   Click o arrastra para pintar. Los cambios se ven al darle Play.",
-                MessageType.None);
-            if (GUILayout.Button("Guardar")) { EditorUtility.SetDirty(map); AssetDatabase.SaveAssets(); }
+            // ids a mostrar = las zonas ya pintadas + la seleccionada (aunque todavia no se haya pintado)
+            var ids = map.ZoneIds();
+            if (zoneBrush != '.' && !ids.Contains(zoneBrush)) ids.Add(zoneBrush);
+            if (ids.Count == 0) ids.Add('a');
+            ids.Sort();
+
+            int perRow = 10;
+            for (int i = 0; i < ids.Count; i++)
+            {
+                if (i % perRow == 0) EditorGUILayout.BeginHorizontal();
+                char id = ids[i];
+                var prev = GUI.backgroundColor;
+                GUI.backgroundColor = ZoneColorFor(id) * (zoneBrush == id ? 1f : 0.6f);
+                if (GUILayout.Button(zoneBrush == id ? "[" + id + "]" : id.ToString(), GUILayout.Width(34), GUILayout.Height(24))) zoneBrush = id;
+                GUI.backgroundColor = prev;
+                if (i % perRow == perRow - 1 || i == ids.Count - 1) EditorGUILayout.EndHorizontal();
+            }
+
+            EditorGUILayout.BeginHorizontal();
+            var p = GUI.backgroundColor;
+            GUI.backgroundColor = zoneBrush == '.' ? Color.white : new Color(0.7f, 0.7f, 0.7f);
+            if (GUILayout.Button(zoneBrush == '.' ? "[Borrar zona]" : "Borrar zona", GUILayout.Height(22))) zoneBrush = '.';
+            GUI.backgroundColor = p;
+            if (GUILayout.Button("+ Nueva zona", GUILayout.Height(22))) zoneBrush = NextFreeZoneId();
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.LabelField($"Pincel actual: {(zoneBrush == '.' ? "borrar" : zoneBrush.ToString())}", EditorStyles.miniLabel);
+
+            // Zona de inicio del jugador (elegida entre las zonas pintadas)
+            var painted = map.ZoneIds();
+            var options = new string[painted.Count + 1];
+            options[0] = "(ninguna)";
+            int cur = 0;
+            for (int i = 0; i < painted.Count; i++)
+            {
+                options[i + 1] = painted[i].ToString();
+                if (painted[i] == map.playerHomeZone) cur = i + 1;
+            }
+            int sel = EditorGUILayout.Popup("Zona inicio jugador", cur, options);
+            char newHome = sel == 0 ? '.' : painted[sel - 1];
+            if (newHome != map.playerHomeZone)
+            {
+                Undo.RecordObject(map, "Zona inicio");
+                map.playerHomeZone = newHome;
+                EditorUtility.SetDirty(map);
+            }
         }
 
         void BrushButton(string label, char c)
@@ -96,6 +169,8 @@ namespace Salada.EditorTools
         void DrawGrid()
         {
             EnsureRows();
+            EnsureZoneRows();
+            bool zoneLayer = _layer == PaintLayer.Zones;
             float gw = map.width * CELL, gh = map.height * CELL;
             scroll = EditorGUILayout.BeginScrollView(scroll, GUILayout.Height(Mathf.Min(gh + 8, 460)));
             Rect area = GUILayoutUtility.GetRect(gw, gh);
@@ -112,8 +187,17 @@ namespace Salada.EditorTools
                         GUI.DrawTexture(r, tileSet.tiles[fi].texture, ScaleMode.StretchToFill);
                     else
                         EditorGUI.DrawRect(r, ColorFor(c));
-                    if (c == 'E' || c == 'R' || c == 'Y')
-                        GUI.Label(r, c.ToString(), _tag);
+
+                    char z = map.ZoneAt(x, y);
+                    if (zoneLayer)
+                    {
+                        if (z != '.') { var zc = ZoneColorFor(z); zc.a = 0.55f; EditorGUI.DrawRect(r, zc); GUI.Label(r, z.ToString(), _tag); }
+                    }
+                    else
+                    {
+                        if (_showZonesInTerrain && z != '.') { var zc = ZoneColorFor(z); zc.a = 0.25f; EditorGUI.DrawRect(r, zc); }
+                        if (c == 'E' || c == 'R' || c == 'Y') GUI.Label(r, c.ToString(), _tag);
+                    }
                 }
             }
 
@@ -125,12 +209,55 @@ namespace Salada.EditorTools
                 int cy = map.height - 1 - drawY;
                 if (cx >= 0 && cx < map.width && cy >= 0 && cy < map.height)
                 {
-                    Paint(cx, cy, brush);
+                    if (zoneLayer) PaintZone(cx, cy, zoneBrush);
+                    else Paint(cx, cy, brush);
                     e.Use();
                     Repaint();
                 }
             }
             EditorGUILayout.EndScrollView();
+        }
+
+        void PaintZone(int x, int y, char c)
+        {
+            Undo.RecordObject(map, "Pintar zona");
+            int ri = map.height - 1 - y;
+            var chars = (map.zoneRows[ri] ?? "").PadRight(map.width, '.').ToCharArray();
+            chars[x] = c;
+            map.zoneRows[ri] = new string(chars);
+            EditorUtility.SetDirty(map);
+        }
+
+        void EnsureZoneRows()
+        {
+            if (map.zoneRows == null || map.zoneRows.Length != map.height)
+            {
+                var nr = new string[map.height];
+                for (int i = 0; i < map.height; i++)
+                    nr[i] = (map.zoneRows != null && i < map.zoneRows.Length ? (map.zoneRows[i] ?? "") : "").PadRight(map.width, '.').Substring(0, map.width);
+                map.zoneRows = nr;
+            }
+            else
+            {
+                for (int i = 0; i < map.zoneRows.Length; i++)
+                    if (map.zoneRows[i] == null || map.zoneRows[i].Length != map.width)
+                        map.zoneRows[i] = (map.zoneRows[i] ?? "").PadRight(map.width, '.').Substring(0, map.width);
+            }
+        }
+
+        char NextFreeZoneId()
+        {
+            var used = map.ZoneIds();
+            for (char c = 'a'; c <= 'z'; c++)
+                if (!used.Contains(c)) return c;
+            return 'a';
+        }
+
+        static Color ZoneColorFor(char id)
+        {
+            if (id == '.') return Color.clear;
+            float h = ((id * 47) % 360) / 360f;
+            return Color.HSVToRGB(h, 0.6f, 0.9f);
         }
 
         void Paint(int x, int y, char c)
@@ -175,7 +302,18 @@ namespace Salada.EditorTools
                     for (int x = 0; x < w && x < old[ri].Length; x++) chars[x] = old[ri][x];
                 nr[ri] = new string(chars);
             }
-            map.width = w; map.height = h; map.rows = nr;
+            var oldZ = map.zoneRows;
+            var nz = new string[h];
+            for (int ri = 0; ri < h; ri++)
+            {
+                var chars = new char[w];
+                for (int x = 0; x < w; x++) chars[x] = '.';
+                if (oldZ != null && ri < oldH && ri < oldZ.Length && oldZ[ri] != null)
+                    for (int x = 0; x < w && x < oldZ[ri].Length; x++) chars[x] = oldZ[ri][x];
+                nz[ri] = new string(chars);
+            }
+
+            map.width = w; map.height = h; map.rows = nr; map.zoneRows = nz;
             EditorUtility.SetDirty(map);
         }
 

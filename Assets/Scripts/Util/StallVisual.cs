@@ -30,6 +30,25 @@ namespace Salada.Util
             return root;
         }
 
+        /// <summary>Crea la vista de un puesto con un sprite ilustrado, encajado en 'fitSize' (mantiene aspecto).</summary>
+        public static GameObject CreateSprite(string name, Transform parent, Vector2 worldCenter, float fitSize, Sprite sprite, int order)
+        {
+            var root = new GameObject(name);
+            root.transform.SetParent(parent, false);
+            root.transform.position = new Vector3(worldCenter.x, worldCenter.y, 0f);
+
+            var body = new GameObject("Body");
+            body.transform.SetParent(root.transform, false);
+            var b = sprite.bounds.size;
+            float m = Mathf.Max(b.x, b.y);
+            float s = m > 0f ? fitSize / m : fitSize;
+            body.transform.localScale = new Vector3(s, s, 1f);
+            var sr = body.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = order;
+            return root;
+        }
+
         public static void AddFrontMarker(Transform root, Vector2 size, Vector2Int facing, int order, float cellSize)
         {
             float half = (Mathf.Abs(facing.x) > 0 ? size.x : size.y) * 0.5f;

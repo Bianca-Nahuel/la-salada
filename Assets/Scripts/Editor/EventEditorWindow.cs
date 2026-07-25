@@ -96,7 +96,7 @@ namespace Salada.EditorTools
 
         void SyncManager()
         {
-            var em = Object.FindFirstObjectByType<EventManager>();
+            var em = Object.FindAnyObjectByType<EventManager>();
             if (em == null) { EditorUtility.DisplayDialog("Event Editor", "No hay un EventManager en la escena.", "Ok"); return; }
             var all = Load<GameEvent>(EventsFolder).ToArray();
             var so = new SerializedObject(em);

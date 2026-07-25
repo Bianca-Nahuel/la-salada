@@ -29,9 +29,9 @@ namespace Salada.Combat
         {
             _grid = grid;
             _stall = stall;
-            _combat = FindFirstObjectByType<CombatManager>();
-            _meters = FindFirstObjectByType<BusinessMeters>();
-            _effects = FindFirstObjectByType<GameEffects>();
+            _combat = FindAnyObjectByType<CombatManager>();
+            _meters = FindAnyObjectByType<BusinessMeters>();
+            _effects = FindAnyObjectByType<GameEffects>();
 
             float mult = _combat != null ? _combat.DamageMult(stall.Owner) : 1f;
             damage = data.attackDamage * mult;
