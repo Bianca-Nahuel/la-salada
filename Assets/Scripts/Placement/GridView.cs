@@ -13,7 +13,13 @@ namespace Salada.Placement
     {
         [SerializeField] private int cellSortingOrder = 0;
 
-        [Header("Tiles de pasillo (caminos)")]
+        [Header("Tiles base (llenan cada celda)")]
+        [Tooltip("Tile de MADERA para TODO el piso/camino (Aisle).")]
+        [SerializeField] private Sprite woodTile;
+        [Tooltip("Tile de ARENA para TODA la arena (Grass).")]
+        [SerializeField] private Sprite sandTile;
+
+        [Header("Tiles de pasillo (legacy, fallback si no hay woodTile)")]
         [SerializeField] private MapTileSet tileSet;                 // tiles elegibles por celda (digitos)
         [SerializeField] private Sprite[] aisleTilesHorizontal;      // auto (P): orientacion horizontal
         [SerializeField] private Sprite[] aisleTilesVertical;        // auto (P): orientacion vertical
@@ -49,24 +55,35 @@ namespace Salada.Placement
                     var sr = go.AddComponent<SpriteRenderer>();
                     sr.sortingOrder = cellSortingOrder;
 
-                    Sprite tile = null;
-                    if (model.GetCell(cell) == CellType.Aisle)
+                    bool isAisle = model.GetCell(cell) == CellType.Aisle;
+                    Sprite tile;
+                    if (isAisle)
                     {
-                        int fi = _grid.Layout.FloorTileIndex(x, y);
-                        tile = (fi >= 0 && tileSet != null && tileSet.tiles != null && fi < tileSet.tiles.Length && tileSet.tiles[fi] != null)
-                            ? tileSet.tiles[fi]
-                            : PickAisleTile(cell);
+                        // TODO el piso = madera; si no hay woodTile, cae al sistema viejo (digitos/planks)
+                        tile = woodTile;
+                        if (tile == null)
+                        {
+                            int fi = _grid.Layout.FloorTileIndex(x, y);
+                            tile = (fi >= 0 && tileSet != null && tileSet.tiles != null && fi < tileSet.tiles.Length && tileSet.tiles[fi] != null)
+                                ? tileSet.tiles[fi]
+                                : PickAisleTile(cell);
+                        }
                     }
+                    else
+                    {
+                        tile = sandTile; // TODA la arena = tile de arena
+                    }
+
                     if (tile != null)
                     {
                         sr.sprite = tile;
-                        var b = tile.bounds.size;
+                        var b = tile.bounds.size; // escala para llenar la celda (los tiles chicos se agrandan)
                         go.transform.localScale = new Vector3(b.x > 0 ? _grid.CellSize / b.x : 1f, b.y > 0 ? _grid.CellSize / b.y : 1f, 1f);
                     }
                     else
                     {
                         sr.sprite = PlaceholderSprite.Unit;
-                        sr.color = model.GetCell(cell) == CellType.Aisle ? _grid.aisleColor : _grid.grassColor;
+                        sr.color = isAisle ? _grid.aisleColor : _grid.grassColor;
                         go.transform.localScale = new Vector3(_grid.CellSize, _grid.CellSize, 1f);
                     }
 

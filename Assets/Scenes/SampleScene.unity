@@ -169,6 +169,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.TerritoryManager
   playerHomeZone: a
+  firstRingStalls: 1
+  outerRingStalls: 2
+  rivalExpandStalls: 1
   powerScale: 4
   patienceMax: 100
   dailyDecayBase: 6
@@ -180,6 +183,8 @@ MonoBehaviour:
   attackReputationCost: 8
   attackHostilityGain: 8
   maxStallLoss: 3
+  rivalClashChance: 0.5
+  rivalClashStallLoss: 1
   warningColor: {r: 1, g: 0.5, b: 0.2, a: 1}
 --- !u!4 &57626250
 Transform:
@@ -795,7 +800,12 @@ MonoBehaviour:
   salaryPerStall: 5
   protectionBase: 30
   protectionPerDay: 10
-  expandEvery: 3
+  enemyExpansion:
+    baseCost: 3
+    growth: 2
+  neutralExpansion:
+    baseCost: 3
+    growth: 2
   expansionStallData: {fileID: 11400000, guid: 199c3582a5225db4a9533694c1a6578f, type: 2}
   reputationPerSale: 0.5
   hostilityPerSale: 0.3
@@ -1021,6 +1031,8 @@ MonoBehaviour:
   playerPush: 0.06
   basePull: 0.14
   pullGapK: 0.12
+  minPullMult: 0.4
+  maxPullMult: 1.6
   barPixels: 440
 --- !u!1 &1770848649
 GameObject:
@@ -1199,6 +1211,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Placement.GridView
   cellSortingOrder: 0
+  woodTile: {fileID: 21300000, guid: 3865424749b768a429b578bd31e9d8b8, type: 3}
+  sandTile: {fileID: 21300000, guid: 6fa5235340f772441af860b2e0c3b17a, type: 3}
   tileSet: {fileID: 11400000, guid: a24b390fb29f24d4f846a493eeb48e4e, type: 2}
   aisleTilesHorizontal:
   - {fileID: 21300000, guid: 9d1bd259dd9fa9f47af0745eecf719d9, type: 3}
