@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Salada.Game;
+using Salada.Combat;
 
 namespace Salada.UI
 {
@@ -19,6 +20,15 @@ namespace Salada.UI
         private GameEvent _ev;
         private Action<int> _onOption;
         private Action _onClose;
+
+        private WaveManager _waves;
+        private BusinessMeters _meters;
+
+        public void Init(WaveManager waves, BusinessMeters meters)
+        {
+            _waves = waves;
+            _meters = meters;
+        }
 
         void Start()
         {
@@ -75,8 +85,26 @@ namespace Salada.UI
                 {
                     int idx = i;
                     var o = _ev.options[i];
-                    AddButton($"{o.label}\n<{Preview(o)}>", new Color(0.2f, 0.5f, 0.65f), () => ChooseOption(idx));
+                    bool canAfford = !WouldGoNegative(o);
+                    string label = o.label;
+#if UNITY_EDITOR
+                    label += $"\n<{Preview(o)}>";
+#endif
+                    AddButton(label, new Color(0.2f, 0.5f, 0.65f), () => ChooseOption(idx), canAfford);
                 }
+        }
+
+        bool WouldGoNegative(EventOption o)
+        {
+            if (_waves != null && o.money != 0 && _waves.Money + o.money < 0) return true;
+            if (_meters != null)
+            {
+                if (o.hostility != 0 && _meters.Get(MeterType.Hostility) + o.hostility < 0) return true;
+                if (o.reputation != 0 && _meters.Get(MeterType.Reputation) + o.reputation < 0) return true;
+                if (o.happiness != 0 && _meters.Get(MeterType.Happiness) + o.happiness < 0) return true;
+                if (o.profit != 0 && _meters.Get(MeterType.Profit) + o.profit < 0) return true;
+            }
+            return false;
         }
 
         void ChooseOption(int i)
@@ -127,20 +155,22 @@ namespace Salada.UI
             return t;
         }
 
-        void AddButton(string label, Color color, UnityEngine.Events.UnityAction onClick)
+        void AddButton(string label, Color color, UnityEngine.Events.UnityAction onClick, bool interactable = true)
         {
             var go = new GameObject("Opt", typeof(RectTransform), typeof(Image), typeof(Button));
             go.transform.SetParent(_content, false);
-            go.GetComponent<Image>().color = color;
+            go.GetComponent<Image>().color = interactable ? color : Color.Lerp(color, new Color(0.15f, 0.15f, 0.15f), 0.7f);
             go.AddComponent<LayoutElement>().minHeight = 50;
-            go.GetComponent<Button>().onClick.AddListener(onClick);
+            var btn = go.GetComponent<Button>();
+            btn.onClick.AddListener(onClick);
+            btn.interactable = interactable;
 
             var textGo = new GameObject("Text", typeof(RectTransform), typeof(Text));
             textGo.transform.SetParent(go.transform, false);
             var rt = textGo.GetComponent<RectTransform>();
             rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.offsetMin = new Vector2(6, 3); rt.offsetMax = new Vector2(-6, -3);
             var t = textGo.GetComponent<Text>();
-            t.font = _font; t.text = label; t.color = Color.white; t.fontSize = 16; t.alignment = TextAnchor.MiddleCenter;
+            t.font = _font; t.text = label; t.color = interactable ? Color.white : new Color(0.6f, 0.6f, 0.6f, 0.8f); t.fontSize = 16; t.alignment = TextAnchor.MiddleCenter;
             t.horizontalOverflow = HorizontalWrapMode.Wrap; t.verticalOverflow = VerticalWrapMode.Overflow;
         }
 

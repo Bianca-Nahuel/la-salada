@@ -35,6 +35,7 @@ namespace Salada.Game
             _meters = FindFirstObjectByType<BusinessMeters>();
             _effects = FindFirstObjectByType<GameEffects>();
             _popup = FindFirstObjectByType<EventPopup>(FindObjectsInactive.Include);
+            if (_popup != null) _popup.Init(_waves, _meters);
             if (_waves != null) _waves.DayPassed += OnDayPassed;
         }
 
