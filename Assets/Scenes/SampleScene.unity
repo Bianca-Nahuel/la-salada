@@ -174,7 +174,8 @@ MonoBehaviour:
   rivalExpandStalls: 1
   powerScale: 4
   patienceMax: 100
-  dailyDecayBase: 6
+  patienceRegenPerDay: 5
+  dailyDecayBase: 10
   warnThreshold: 30
   attackThreshold: 0
   stealDecay: 4
@@ -783,14 +784,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Combat.WaveManager
   grid: {fileID: 2114994001}
-  baseClients: 4
-  perWaveIncrement: 1
+  baseClients: 12
+  perWaveIncrement: 3
   waveDuration: 45
   clientSpeed: 1.8
   convinceThreshold: 100
   clientSize: 0.5
   clientColor: {r: 0.15, g: 0.35, b: 0.95, a: 1}
   buyPauseDuration: 1
+  convinceDecayPerSec: 5
+  centerRusherChance: 0.35
+  longPathChance: 0.45
+  rushSpeedMult: 2.2
+  slowSpeedMult: 0.55
   startingMoney: 150
   saleReward: 10
   refundFraction: 0.5
@@ -1032,11 +1038,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 10a7e7c8afe136141881710304ce38ef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Salada.UI.DisputeMinigame
-  playerPush: 0.06
-  basePull: 0.14
-  pullGapK: 0.12
-  minPullMult: 0.4
-  maxPullMult: 1.6
+  clicksToWinEqual: 4
+  clicksPerPowerDiff: 0.5
+  pushPerClick: 0.06
+  minRequiredCPS: 0.5
   barPixels: 440
 --- !u!1 &1770848649
 GameObject:
@@ -1217,6 +1222,7 @@ MonoBehaviour:
   cellSortingOrder: 0
   woodTile: {fileID: 21300000, guid: 3865424749b768a429b578bd31e9d8b8, type: 3}
   sandTile: {fileID: 21300000, guid: 6fa5235340f772441af860b2e0c3b17a, type: 3}
+  tilesPerCell: 1
   tileSet: {fileID: 11400000, guid: a24b390fb29f24d4f846a493eeb48e4e, type: 2}
   aisleTilesHorizontal:
   - {fileID: 21300000, guid: 9d1bd259dd9fa9f47af0745eecf719d9, type: 3}

@@ -14,21 +14,28 @@ namespace Salada.UI
     /// </summary>
     public class DisputeMinigame : MonoBehaviour
     {
-        [SerializeField] private float playerPush = 0.075f;  // avance por click/tecla
-        [SerializeField] private float basePull = 0.11f;     // tiron base del rival por segundo
-        [SerializeField] private float pullGapK = 0.06f;     // cuanto pesa la diferencia de poder
-        [SerializeField] private float minPullMult = 0.4f;   // tope minimo/maximo del tiron segun poder
-        [SerializeField] private float maxPullMult = 1.6f;   // (asi siempre es ganable machacando)
+        [Header("Balance del empuje (config)")]
+        [Tooltip("Clicks/seg promedio para EMPATAR con poder igualado. Mas que esto = ganas; menos = perdes.")]
+        [SerializeField] private float clicksToWinEqual = 4f;
+        [Tooltip("Cuanto sube/baja ese umbral por cada punto de diferencia de poder (rival - vos). Ej 0.5 = +0.5 clicks/seg por punto en contra.")]
+        [SerializeField] private float clicksPerPowerDiff = 0.5f;
+        [Tooltip("Cuanto avanza el dial por click (mas alto = pelea mas corta). No cambia la dificultad relativa.")]
+        [SerializeField] private float pushPerClick = 0.06f;
+        [Tooltip("Piso del umbral de clicks/seg (con mucha ventaja igual pedis al menos esto).")]
+        [SerializeField] private float minRequiredCPS = 0.5f;
         [SerializeField] private float barPixels = 440f;
 
         private GameObject _root;
+        private GameObject _intro;
+        private Text _introText;
         private RectTransform _marker;
         private Text _title;
         private Font _font;
 
         private bool _showing;
+        private bool _started;        // el tira-y-afloja arranca despues del mensaje
         private float _t;
-        private float _enemyPull;
+        private float _enemyPull;      // tiron del rival por seg = requiredCPS * pushPerClick (empate a requiredCPS clicks/seg)
         private Owner _rival;
         private int _playerPower, _rivalPower;
         private Action<Owner, float> _onResolved;
@@ -45,6 +52,9 @@ namespace Salada.UI
 
         void Build()
         {
+            // limpiar cualquier hijo residual guardado en la escena (evita que aparezca el cartel al iniciar)
+            for (int i = transform.childCount - 1; i >= 0; i--) Destroy(transform.GetChild(i).gameObject);
+
             _root = new GameObject("Root", typeof(RectTransform));
             _root.transform.SetParent(transform, false);
             Stretch(_root.GetComponent<RectTransform>());
@@ -64,7 +74,7 @@ namespace Salada.UI
             _title = MakeText(panel.transform, "", 22, new Color(1f, 0.85f, 0.5f), FontStyle.Bold);
             SetRect(_title.rectTransform, new Vector2(0.5f, 1f), new Vector2(0, -18), new Vector2(480, 40));
 
-            var sub = MakeText(panel.transform, "Empuja con CLICK o ESPACIO. Tu lado: derecha.", 14, new Color(0.8f, 0.83f, 0.9f), FontStyle.Normal);
+            var sub = MakeText(panel.transform, "CLICK / ESPACIO = empujar (tu lado: derecha)   ·   Click der / Esc = retirarse", 13, new Color(0.8f, 0.83f, 0.9f), FontStyle.Normal);
             SetRect(sub.rectTransform, new Vector2(0.5f, 1f), new Vector2(0, -56), new Vector2(480, 28));
 
             // barra
@@ -88,6 +98,23 @@ namespace Salada.UI
 
             MakeButton(panel.transform, "¡EMPUJA!", new Color(0.2f, 0.55f, 0.6f), new Vector2(0, -60), new Vector2(220, 60), Push);
             MakeButton(panel.transform, "Retirarse", new Color(0.4f, 0.3f, 0.3f), new Vector2(0, -128), new Vector2(220, 40), Retreat);
+
+            // ---- overlay de mensaje ANTES de la pelea ----
+            _intro = new GameObject("Intro", typeof(RectTransform), typeof(Image));
+            _intro.transform.SetParent(_root.transform, false); // ultimo hijo -> se dibuja arriba
+            Stretch(_intro.GetComponent<RectTransform>());
+            _intro.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.82f);
+
+            var ipanel = new GameObject("IntroPanel", typeof(RectTransform), typeof(Image));
+            ipanel.transform.SetParent(_intro.transform, false);
+            var iprt = ipanel.GetComponent<RectTransform>();
+            iprt.anchorMin = iprt.anchorMax = new Vector2(0.5f, 0.5f); iprt.pivot = new Vector2(0.5f, 0.5f);
+            iprt.sizeDelta = new Vector2(520, 220);
+            ipanel.GetComponent<Image>().color = new Color(0.14f, 0.12f, 0.16f, 1f);
+
+            _introText = MakeText(ipanel.transform, "", 20, new Color(1f, 0.85f, 0.55f), FontStyle.Bold);
+            SetRect(_introText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0, -24), new Vector2(480, 120));
+            MakeButton(ipanel.transform, "¡Empezar!", new Color(0.25f, 0.6f, 0.35f), new Vector2(0, -80), new Vector2(240, 56), BeginFight);
         }
 
         public void Play(char zone, Owner attacker, Owner defender, int attackerPower, int defenderPower, Action<Owner, float> onResolved)
@@ -100,12 +127,20 @@ namespace Salada.UI
             _playerPower = playerIsAttacker ? attackerPower : defenderPower;
             _rivalPower = playerIsAttacker ? defenderPower : attackerPower;
 
-            // el rival tira mas fuerte si tiene mas poder que vos (dureza segun diferencia, acotada)
-            _enemyPull = basePull * Mathf.Clamp(1f + pullGapK * (_rivalPower - _playerPower), minPullMult, maxPullMult);
+            int gap = _rivalPower - _playerPower; // >0 = estas en desventaja
+            // umbral de clicks/seg para empatar; a ese ritmo el dial no se mueve
+            float requiredCPS = Mathf.Max(minRequiredCPS, clicksToWinEqual + clicksPerPowerDiff * gap);
+            _enemyPull = requiredCPS * pushPerClick;
 
             _t = 0.5f;
             _title.text = $"Disputa por la Zona {zone}  (vos {_playerPower} vs {_rival} {_rivalPower})";
             UpdateMarker();
+
+            // mensaje antes de arrancar
+            string quien = playerIsAttacker ? $"Vas a atacar la Zona {zone}." : $"¡Los rivales de la Zona {zone} te atacan!";
+            _introText.text = $"{quien}\n(vos {_playerPower} vs {_rival} {_rivalPower})\n\nTOCA o ESPACIO para EMPEZAR.\nDespues macha para llevar el marcador a tu lado (derecha).";
+            _intro.SetActive(true);
+            _started = false;
 
             _prevTimeScale = Time.timeScale;
             Time.timeScale = 0f;
@@ -113,15 +148,29 @@ namespace Salada.UI
             _root.SetActive(true);
         }
 
+        void BeginFight() { _started = true; if (_intro != null) _intro.SetActive(false); }
+
         void Update()
         {
             if (!_showing) return;
 
-            // empujar: click izquierdo en cualquier lado, o Espacio (asi no depende de acertarle al boton)
-            bool push = false;
-            if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame) push = true;
-            if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame) push = true;
-            if (push) Push();
+            bool clickOrSpace =
+                (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame) ||
+                (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame);
+
+            // durante el mensaje: arrancar con click/espacio directo (no depende del EventSystem con timeScale=0)
+            if (!_started)
+            {
+                if (clickOrSpace) BeginFight();
+                return;
+            }
+
+            // retirarse con click derecho o Escape (el boton del EventSystem no responde con timeScale=0)
+            if ((Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame) ||
+                (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame))
+            { Retreat(); return; }
+
+            if (clickOrSpace) Push(); // empujar: click en cualquier lado o Espacio
 
             _t -= _enemyPull * Time.unscaledDeltaTime;
 
@@ -132,7 +181,7 @@ namespace Salada.UI
             UpdateMarker();
         }
 
-        void Push() { if (_showing) { _t += playerPush; UpdateMarker(); } } // sin tope: el chequeo de victoria usa t>=1
+        void Push() { if (_showing && _started) { _t += pushPerClick; UpdateMarker(); } }
 
         void Retreat() { if (_showing) Resolve(_rival); } // rendirse = gana el rival
 
