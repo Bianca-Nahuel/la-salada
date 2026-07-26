@@ -80,9 +80,9 @@ namespace Salada.Combat
         ExpansionTuning TuningFor(Owner o) => o == Owner.Enemy ? enemyExpansion : neutralExpansion;
 
         [Header("Balanzas (cuanto suben/bajan las estadisticas)")]
-        [Tooltip("Reputacion que sube por venta GANADA A UN RIVAL (disputada). Las ventas libres no suman.")]
+        [Tooltip("Reputacion por venta disputada: +sube si se la ganas a un rival, -baja si te la gana el rival.")]
         public float reputationPerSale = 1f;
-        [Tooltip("Hostilidad que sube por venta disputada, SOLO si el rival esta en tu zona o una adyacente.")]
+        [Tooltip("Hostilidad por venta disputada con rival en zona propia/adyacente: +sube si ganas, -baja si perdes.")]
         public float hostilityPerSale = 0.3f;
         [Tooltip("Reputacion que BAJA por cada cliente que un puesto tuyo ataco pero se fue sin comprar.")]
         public float reputationPerEscape = 0.5f;
@@ -377,6 +377,7 @@ namespace Salada.Combat
                 SalesLost++;
                 _pendingExpansion.TryGetValue(winner, out int n); // expansion diferida al fin de la oleada
                 _pendingExpansion[winner] = n + 1;
+                if (_meters != null) ApplyPlayerLostSaleMeters(c); // perdiste una venta disputada -> baja rep/hostilidad
             }
             RecordSaleStats(c, winner); // fuerza de ventas + atribucion por zona + golpes perdidos
         }
@@ -452,6 +453,20 @@ namespace Salada.Combat
             }
             if (wonFromRival) _meters.Add(MeterType.Reputation, reputationPerSale); // le ganaste a un rival
             if (angeredNearby) _meters.Add(MeterType.Hostility, hostilityPerSale);  // rival al lado -> se calienta
+        }
+
+        /// <summary>
+        /// Al reves: si un rival te gano un cliente que VOS estabas peleando, baja tu reputacion
+        /// (te ganaron de mano) y, si te lo gano cerca (zona propia/adyacente), baja tu hostilidad.
+        /// Simetrico a ApplyPlayerSaleMeters, con las mismas magnitudes.
+        /// </summary>
+        void ApplyPlayerLostSaleMeters(Client c)
+        {
+            if (c.ConvinceBy(Owner.Player) <= 0f) return; // no la estabas peleando -> no cuenta como perdida tuya
+            _meters.Add(MeterType.Reputation, -reputationPerSale);
+            char z = c.LastSaleStall != null ? grid.Model.ZoneOf(c.LastSaleStall.OriginCell) : '.';
+            if (z != '.' && RivalInZoneOrAdjacent(z, Owner.Player)) // te la gano un rival pegado a vos
+                _meters.Add(MeterType.Hostility, -hostilityPerSale);
         }
 
         /// <summary>True si 'rival' tiene puestos en la zona 'zone' o en una adyacente (distancia &lt;= 1).</summary>
