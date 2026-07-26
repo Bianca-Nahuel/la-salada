@@ -15,7 +15,7 @@ MonoBehaviour:
   displayName: Puesto grande
   footprintWidth: 3
   footprintHeight: 1
-  cost: 50
+  cost: 70
   attackDamage: 55
   attackRange: 3
   attackCooldown: 0.9

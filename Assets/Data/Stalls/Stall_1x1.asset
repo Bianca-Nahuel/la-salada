@@ -15,7 +15,7 @@ MonoBehaviour:
   displayName: Puesto chico
   footprintWidth: 1
   footprintHeight: 1
-  cost: 20
+  cost: 40
   attackDamage: 25
   attackRange: 2.5
   attackCooldown: 0.7

@@ -264,7 +264,7 @@ namespace Salada.UI
             go.transform.SetParent(transform, false);
             var rt = go.GetComponent<RectTransform>();
             rt.anchorMin = new Vector2(1, 0); rt.anchorMax = new Vector2(1, 0); rt.pivot = new Vector2(1, 0);
-            rt.sizeDelta = new Vector2(150, 28); rt.anchoredPosition = new Vector2(-6, -34);
+            rt.sizeDelta = new Vector2(150, 28); rt.anchoredPosition = new Vector2(-6, 34);
             go.GetComponent<Image>().color = new Color(0.55f, 0.25f, 0.6f);
             go.GetComponent<Button>().onClick.AddListener(() => waves?.DebugSkipToDayComplete());
             var t = MakeText(rt, "DEBUG: saltar dia", 12, Color.white, FontStyle.Normal, TextAnchor.MiddleCenter);

@@ -1,5 +1,6 @@
 using UnityEngine;
 using Salada.Util;
+using Salada.UI;
 
 namespace Salada.Placement
 {
@@ -21,6 +22,9 @@ namespace Salada.Placement
         private SpriteRenderer _rangeSr;
         private float _cellSize = 1f;
 
+        private GameObject _hintGo;
+        private TextMesh _hintTm;
+
         void Awake()
         {
             var rootSr = GetComponent<SpriteRenderer>();
@@ -33,6 +37,21 @@ namespace Salada.Placement
 
             _marker = NewChild("Front", out _markerSr, PlaceholderSprite.Unit, sortingOrder + 1);
             _markerSr.color = new Color(0.1f, 0.1f, 0.12f, 0.8f);
+
+            // Cartelito "Q/E" junto al puesto a colocar, para avisar que se puede rotar.
+            _hintGo = new GameObject("RotateHint");
+            _hintGo.transform.SetParent(transform, false);
+            _hintTm = _hintGo.AddComponent<TextMesh>();
+            var font = UIFont.Get();
+            _hintTm.font = font;
+            _hintGo.GetComponent<MeshRenderer>().sharedMaterial = font.material;
+            _hintGo.GetComponent<MeshRenderer>().sortingOrder = sortingOrder + 2;
+            _hintTm.text = "Q/E ↻";
+            _hintTm.color = new Color(1f, 1f, 1f, 0.95f);
+            _hintTm.fontSize = 60;
+            _hintTm.characterSize = 0.13f;
+            _hintTm.anchor = TextAnchor.MiddleLeft;
+            _hintTm.alignment = TextAlignment.Left;
 
             Hide();
         }
@@ -91,6 +110,15 @@ namespace Salada.Placement
                 _rangeSr.enabled = true;
             }
             else _rangeSr.enabled = false;
+
+            // "Q/E" al costado: solo mientras se esta colocando (demoler pasa facing cero).
+            if (facing != Vector2Int.zero)
+            {
+                float halfWidth = size.x * 0.5f;
+                _hintGo.transform.localPosition = new Vector3(halfWidth + 0.18f * _cellSize, 0f, 0f);
+                _hintGo.SetActive(true);
+            }
+            else _hintGo.SetActive(false);
         }
 
         public void Hide()
@@ -98,6 +126,7 @@ namespace Salada.Placement
             if (_body != null) _body.enabled = false;
             if (_markerSr != null) _markerSr.enabled = false;
             if (_rangeSr != null) _rangeSr.enabled = false;
+            if (_hintGo != null) _hintGo.SetActive(false);
         }
     }
 }

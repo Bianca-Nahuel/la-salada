@@ -7,8 +7,9 @@ namespace Salada.Placement
 {
     /// <summary>
     /// Colocacion/demolicion de puestos del jugador. Solo funciona en fase Building (no
-    /// durante una oleada). Comprar descuenta plata; demoler reembolsa una parte. Click
-    /// derecho rota. La creacion se delega a GridManager.SpawnStall.
+    /// durante una oleada). Comprar descuenta plata; demoler reembolsa una parte. Q/E rotan
+    /// el puesto a colocar; click derecho cancela la accion actual (construir o demoler) y
+    /// vuelve al cursor libre. La creacion se delega a GridManager.SpawnStall.
     /// </summary>
     public class PlacementController : MonoBehaviour
     {
@@ -66,12 +67,19 @@ namespace Salada.Placement
             // Idle o durante la oleada -> cursor libre, sin ghost.
             if (CurrentMode == Mode.Idle || !CanBuild) { ghost.Hide(); return; }
 
+            if (mouse.rightButton.wasPressedThisFrame) { Cancel(); ghost.Hide(); return; } // clic derecho cancela la accion actual
+
             bool overUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
             Vector2Int cell = grid.Model.WorldToCell(ScreenToWorld(mouse.position.ReadValue()));
 
             if (CurrentMode == Mode.Place)
             {
-                if (mouse.rightButton.wasPressedThisFrame) _rot = (_rot + 1) % 4;
+                var kb = Keyboard.current;
+                if (kb != null)
+                {
+                    if (kb.qKey.wasPressedThisFrame) _rot = (_rot + 3) % 4; // Q: rota hacia un lado
+                    if (kb.eKey.wasPressedThisFrame) _rot = (_rot + 1) % 4; // E: rota hacia el otro
+                }
                 UpdatePlace(cell, overUI, mouse);
             }
             else UpdateDemolish(cell, overUI, mouse);

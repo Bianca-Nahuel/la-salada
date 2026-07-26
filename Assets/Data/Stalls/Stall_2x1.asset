@@ -15,7 +15,7 @@ MonoBehaviour:
   displayName: Puesto mediano
   footprintWidth: 2
   footprintHeight: 1
-  cost: 35
+  cost: 55
   attackDamage: 40
   attackRange: 2.8
   attackCooldown: 0.8

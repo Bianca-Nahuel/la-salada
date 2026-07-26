@@ -10,34 +10,34 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8a4b9b9cde64d984db7782bf255b0d6c, type: 3}
-  m_Name: Ev_Endeudados
+  m_Name: Ev_ElQueAvisaNoTraiciona
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.GameEvent
-  id: 4bcea793a14a4b0c89599d86bf1cbe53
-  title: Endeudados
-  speaker: {fileID: 11400000, guid: ebb13c032a1ec9f45a1f737e7c4eb783, type: 2}
-  description: "Estamos en n\xFAmeros rojos, tenemos que solucionarlo lo antes posible
-    o vamos a quebrar. "
-  mandatory: 1
-  repeatable: 0
+  id: 738068460d7e4d69808905274b695fc2
+  title: El que avisa no traiciona
+  speaker: {fileID: 11400000, guid: b1ae44a8815f63744a38535e8ca6e0f4, type: 2}
+  description: Al llegar a la feria ves uno de tus puestos destruido.
+  mandatory: 0
+  repeatable: 1
   conditions:
-  - type: 0
+  - type: 3
     intValue: 0
-    value: 0
+    value: 80
     meter: 0
     mode: 0
     events: []
     options: []
-  - type: 2
+  - type: 5
     intValue: 0
-    value: 0
+    value: 80
     meter: 0
-    mode: 0
-    events: []
+    mode: 1
+    events:
+    - {fileID: 11400000, guid: a8898073705983c4da8ed278376f0c6f, type: 2}
     options: []
   options:
-  - id: 7ce7aa456cb84c689fc4fa819c062acd
-    label: Vamos a hacer lo posible
-    outcome: Dale que remontamos.
+  - id: 50f375a90cd049d3907ec0ba40aa425f
+    label: ...
+    outcome: ...
     hostility: 0
     reputation: 0
     happiness: 0
@@ -45,7 +45,7 @@ MonoBehaviour:
     money: 0
     moneyPerStall: 0
     salaryIncreasePercent: 0
-    destroyBiggestStall: 0
+    destroyBiggestStall: 1
     triggerGameOver: 0
     special: 0
     specialMagnitude: 0
