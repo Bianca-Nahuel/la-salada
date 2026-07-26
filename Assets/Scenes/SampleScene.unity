@@ -868,13 +868,15 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 575475d0ae3289346ad402ee7038d37f, type: 2}
   - {fileID: 11400000, guid: 0123456789abcdef0123456789abcde0, type: 2}
   - {fileID: 11400000, guid: 0123456789abcdef0123456789abcde5, type: 2}
+  - {fileID: 11400000, guid: 0fd8b83e47134d047b4a535318e83b8d, type: 2}
   - {fileID: 11400000, guid: 9e4b79c5229372a4f885787d355ef364, type: 2}
   - {fileID: 11400000, guid: 0123456789abcdef0123456789abcde4, type: 2}
   - {fileID: 11400000, guid: 0123456789abcdef0123456789abcde3, type: 2}
   - {fileID: 11400000, guid: 0123456789abcdef0123456789abcde1, type: 2}
   - {fileID: 11400000, guid: 0123456789abcdef0123456789abcde2, type: 2}
-  - {fileID: 11400000, guid: bf13091b76e9d074f8a7063f6ddef60e, type: 2}
   - {fileID: 11400000, guid: 0e1d8504a1599dc4eb70b8914d3a833b, type: 2}
+  - {fileID: 11400000, guid: aa297b679f182cc419123656b8f05451, type: 2}
+  - {fileID: 11400000, guid: bf13091b76e9d074f8a7063f6ddef60e, type: 2}
 --- !u!114 &1234581336
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a4b9b9cde64d984db7782bf255b0d6c, type: 3}
+  m_Name: Ev_Endeudados
+  m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.GameEvent
+  id: 4bcea793a14a4b0c89599d86bf1cbe53
+  title: Endeudados
+  speaker: {fileID: 11400000, guid: ebb13c032a1ec9f45a1f737e7c4eb783, type: 2}
+  description: "Estamos en n\xFAmeros rojos, tenemos que solucionarlo lo antes posible
+    o vamos a quebrar. "
+  mandatory: 1
+  repeatable: 0
+  conditions:
+  - type: 0
+    intValue: 0
+    value: 0
+    meter: 0
+    mode: 0
+    events: []
+    options: []
+  - type: 2
+    intValue: 0
+    value: 0
+    meter: 0
+    mode: 0
+    events: []
+    options: []
+  options:
+  - id: 7ce7aa456cb84c689fc4fa819c062acd
+    label: Vamos a hacer lo posible
+    outcome: "Hoy te convert\xEDs en h\xE9roe"
+    hostility: 0
+    reputation: 0
+    happiness: 0
+    profit: 0
+    money: 0
+    moneyPerStall: 0
+    salaryIncreasePercent: 0
+    destroyBiggestStall: 0
+    triggerGameOver: 0
+    special: 0
+    specialMagnitude: 0
+    special2: 0
+    specialMagnitude2: 0
+    specialWaves: 0
+    specialOneDayOnly: 0
+    specialPermanent: 0
