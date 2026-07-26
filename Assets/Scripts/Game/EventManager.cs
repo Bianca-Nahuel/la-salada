@@ -45,6 +45,9 @@ namespace Salada.Game
         public bool IsEventPending => _showing || _showQueue.Count > 0;
         public GameEvent[] Events { get => events; set => events = value; }
 
+        /// <summary>El tutorial lo activa para que el evento inicial no se dispare (lo reemplaza el tutorial).</summary>
+        public bool SuppressInitialDay;
+
         void Start()
         {
             _waves = FindFirstObjectByType<WaveManager>();
@@ -68,6 +71,7 @@ namespace Salada.Game
         IEnumerator TriggerInitialDay()
         {
             yield return null;
+            if (SuppressInitialDay) yield break; // el tutorial reemplaza el evento del dia 1
             OnDayPassed();
         }
 

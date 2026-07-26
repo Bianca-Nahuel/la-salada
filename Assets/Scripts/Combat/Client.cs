@@ -80,6 +80,8 @@ namespace Salada.Combat
 
         public bool IsTargetable => !_sold;
         public float TotalConvince => _total;
+        /// <summary>True cuando el cliente ya llego al puesto (se detuvo a comprar). Para el tutorial.</summary>
+        public bool Arrived { get; private set; }
 
         /// <summary>Progreso de venta [0..1] (que tan cerca esta de venderse). Para el targeting rival.</summary>
         public float SaleProgress => _threshold > 0f ? Mathf.Clamp01(_total / _threshold) : 0f;
@@ -348,6 +350,7 @@ namespace Salada.Combat
         void StartPause()
         {
             _state = State.Pausing; _pauseTimer = _pauseDuration;
+            Arrived = true;
             // el cliente llego al puesto: ahora si mostramos el cartelito de la venta (y su sonido)
             if (_hasArrivalText)
             {

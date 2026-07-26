@@ -77,8 +77,10 @@ namespace Salada.Game
         {
             if (grid == null || grid.Model == null || territory == null) return;
             var m = grid.Model;
+            var tut = placement != null ? placement.TutorialCells : null;
             foreach (var (cell, sr) in _cells)
             {
+                if (tut != null) { sr.color = tut.Contains(cell) ? adjFreeColor : blockedColor; continue; } // tutorial: solo la celda permitida en verde
                 var cat = territory.ZoneBuildCategory(Owner.Player, m.ZoneOf(cell));
                 sr.color = ColorFor(cat);
             }

@@ -21,7 +21,7 @@ MonoBehaviour:
   repeatable: 0
   conditions:
   - type: 0
-    intValue: 1
+    intValue: 999
     value: 1
     meter: 0
     mode: 1

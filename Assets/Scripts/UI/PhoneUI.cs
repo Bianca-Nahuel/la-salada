@@ -653,9 +653,58 @@ namespace Salada.UI
             }
 
             // construir: habilitado solo en Building y si alcanza la plata (si no, gris)
-            if (_demolishImg != null) Dim(_demolishImg, building);
-            foreach (var (img, data) in _buyButtons)
-                Dim(img, building && waves.CanAfford(data.cost));
+            if (_spotMode != 1) // en spotlight de boton, manda el tutorial (no la logica normal)
+            {
+                if (_demolishImg != null) Dim(_demolishImg, building);
+                foreach (var (img, data) in _buyButtons)
+                    Dim(img, building && waves.CanAfford(data.cost));
+            }
+            ApplySpotlight();
+        }
+
+        // ---- tutorial: resaltar / limitar botones ----
+        private int _spotMode;      // 0 = nada, 1 = solo un boton habilitado, 2 = resaltar un medidor
+        private string _spotName;
+
+        public void TutorialSpotlightButton(string name) { _spotMode = 1; _spotName = name; }
+        public void TutorialSpotlightMeter(string name) { _spotMode = 2; _spotName = name; }
+        public void ClearTutorial()
+        {
+            _spotMode = 0; _spotName = null;
+            // restaurar escala, interactable y color de todo (si no, quedan botones apagados/bloqueados)
+            foreach (var n in LayoutNames)
+            {
+                var rt = FindDeep(transform, n); if (rt == null) continue;
+                rt.localScale = Vector3.one;
+                var btn = rt.GetComponent<Button>(); if (btn != null) btn.interactable = true;
+                var fb = rt.GetComponent<ButtonFeedback>(); if (fb != null) fb.SetBase(Color.white);
+            }
+        }
+
+        static readonly string[] SpotButtons = { "Build_0", "Build_1", "Build_2", "Demoler", "Wave", "Zonas", "Opciones" };
+
+        void ApplySpotlight()
+        {
+            if (_spotMode == 0) return;
+            float pulse = 1f + 0.07f * Mathf.Sin(Time.unscaledTime * 6f);
+            if (_spotMode == 1) // solo el boton focal habilitado y brillante; el resto apagado
+            {
+                foreach (var n in SpotButtons)
+                {
+                    var rt = FindDeep(transform, n); if (rt == null) continue;
+                    bool focus = n == _spotName;
+                    var btn = rt.GetComponent<Button>(); if (btn != null) btn.interactable = focus;
+                    var fb = rt.GetComponent<ButtonFeedback>();
+                    var c = focus ? Color.white : new Color(0.32f, 0.32f, 0.35f, 0.9f);
+                    if (fb != null) fb.SetBase(c); else { var im = rt.GetComponent<Image>(); if (im != null) im.color = c; }
+                    rt.localScale = focus ? Vector3.one * pulse : Vector3.one;
+                }
+            }
+            else if (_spotMode == 2) // resaltar un medidor (latido), sin tocar los botones
+            {
+                var rt = FindDeep(transform, _spotName);
+                if (rt != null) rt.localScale = Vector3.one * pulse;
+            }
         }
 
         // el mouse esta sobre (o pegado a) la esquina donde vive el celu, usando su huella "desplegada"

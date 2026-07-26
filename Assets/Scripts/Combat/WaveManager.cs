@@ -349,6 +349,35 @@ namespace Salada.Combat
         /// <summary>Genera un cliente ya mismo (para testeo).</summary>
         public void DebugSpawnClient() => SpawnClient();
 
+        public IReadOnlyList<Vector2Int> Openings => _openings;
+
+        /// <summary>
+        /// Cliente scripteado del tutorial: entra por 'entrance', pasa por 'frontCell' (frente a tu
+        /// puesto para que lo convenza) y sale por 'exit'. Umbral fijo (en golpes de referencia).
+        /// </summary>
+        public Client SpawnTutorialClient(Vector2Int entrance, Vector2Int frontCell, Vector2Int exit, float hits)
+        {
+            var m = grid.Model;
+            var p1 = m.FindAislePath(entrance, frontCell);
+            var p2 = m.FindAislePath(frontCell, exit);
+            if (p1 == null || p1.Count < 1) return null;
+            var cells = new List<Vector2Int>(p1);
+            if (p2 != null) for (int i = 1; i < p2.Count; i++) cells.Add(p2[i]);
+            if (cells.Count < 2) return null;
+
+            var worldPath = new List<Vector3>(cells.Count);
+            foreach (var c in cells) { var wc = m.CellToWorldCenter(c); worldPath.Add(new Vector3(wc.x, wc.y, 0f)); }
+
+            var go = new GameObject("TutorialClient");
+            go.transform.SetParent(_clientsParent, false);
+            var client = go.AddComponent<Client>();
+            if (clientSkins != null && clientSkins.skins.Count > 0) client.SetSkin(clientSkins.skins[NextInt(clientSkins.skins.Count)]);
+            client.SetExits(_openings);
+            client.Init(grid, worldPath, clientSpeed, hits * referenceHitDamage, buyPauseDuration, clientSize, clientColor,
+                0f /*sin decaimiento: que no se le baje la atencion en el tutorial*/, OnConverted, OnEscaped);
+            return client;
+        }
+
         /// <summary>Recorrido directo boca->boca, corto o largo (segun longPathChance).</summary>
         // roll para la ayuda de arranque: solo dias <= helpDays, con puestos propios, y por chance
         bool HelpBiasRoll() => Day <= helpDays && PlayerStallCount() > 0 && NextFloat() < helpBiasChance;

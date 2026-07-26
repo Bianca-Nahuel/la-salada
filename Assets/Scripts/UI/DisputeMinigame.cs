@@ -50,6 +50,10 @@ namespace Salada.UI
 
         public bool IsShowing => _showing;
 
+        private float _easyMult = 1f;
+        /// <summary>El tutorial lo pone facil (el rival empuja menos). 1 = normal.</summary>
+        public void SetEasyMode(bool on) { _easyMult = on ? 0.45f : 1f; }
+
         void Start()
         {
             _font = UIFont.Get();
@@ -142,7 +146,7 @@ namespace Salada.UI
             int gap = _rivalPower - _playerPower; // >0 = estas en desventaja
             // umbral de clicks/seg para empatar; a ese ritmo el dial no se mueve
             float requiredCPS = Mathf.Max(minRequiredCPS, clicksToWinEqual + clicksPerPowerDiff * gap);
-            _enemyPull = requiredCPS * pushPerClick * enemyPushMult;
+            _enemyPull = requiredCPS * pushPerClick * enemyPushMult * _easyMult;
 
             _t = 0.5f;
             _title.text = $"Disputa por la Zona {zone}  (vos {_playerPower} vs {_rival.Display()} {_rivalPower})";

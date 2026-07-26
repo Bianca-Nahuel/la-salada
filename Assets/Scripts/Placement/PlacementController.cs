@@ -25,6 +25,9 @@ namespace Salada.Placement
         public Mode CurrentMode { get; private set; } = Mode.Idle;
         public StallData SelectedStall { get; private set; }
 
+        /// <summary>Tutorial: si !=null, solo se puede construir en estas celdas (el resto no es valido).</summary>
+        public System.Collections.Generic.HashSet<Vector2Int> TutorialCells;
+
         private static readonly Vector2Int[] Dirs =
             { new Vector2Int(0, -1), new Vector2Int(-1, 0), new Vector2Int(0, 1), new Vector2Int(1, 0) };
         private int _rot;
@@ -103,7 +106,8 @@ namespace Salada.Placement
             bool affordable = _waves == null || _waves.CanAfford(SelectedStall.cost);
             bool facesAisle = grid.Model.HasAisleInFront(cell, footprint, Facing); // solo mirando a un camino
             bool inZone = territory == null || territory.CanBuild(Owner.Player, cell, footprint, out _); // zona propia/adyacente
-            bool valid = grid.Model.CanPlace(cell, footprint, out _) && affordable && facesAisle && inZone;
+            bool tutorialOk = TutorialCells == null || TutorialCells.Contains(cell); // restriccion del tutorial
+            bool valid = grid.Model.CanPlace(cell, footprint, out _) && affordable && facesAisle && inZone && tutorialOk;
             var sprite = footprint == Vector2Int.one ? grid.StallSpriteFor(Owner.Player, Facing) : null;
             ghost.Show(grid.Model.FootprintCenterWorld(cell, footprint), StallSize(footprint), valid, Facing, AttackRange, sprite);
 

@@ -17,6 +17,8 @@ namespace Salada.Game
         [SerializeField] private float zoomStep = 0.6f;    // por muesca de rueda
         [SerializeField] private float minZoom = 2.5f;
         [SerializeField] private float startZoom = 5f;
+        [Tooltip("Arrancar mostrando TODO el mapa (zoom out completo). Si no, usa startZoom.")]
+        [SerializeField] private bool startFullView = true;
         [Tooltip("Cuanto se puede ver mas alla del borde del mapa (parte no jugable), en unidades de mundo.")]
         [SerializeField] private float viewMargin = 2f;
 
@@ -37,7 +39,7 @@ namespace Salada.Game
             float mapW = m.Width * m.CellSize + 2f * viewMargin, mapH = m.Height * m.CellSize + 2f * viewMargin;
             // zoom maximo = ver todo el mapa + margen (el que sea mas restrictivo entre alto y ancho)
             _maxZoom = Mathf.Max(mapH * 0.5f, mapW / (2f * Mathf.Max(0.1f, _cam.aspect)));
-            _cam.orthographicSize = Mathf.Clamp(startZoom, minZoom, _maxZoom);
+            _cam.orthographicSize = startFullView ? _maxZoom : Mathf.Clamp(startZoom, minZoom, _maxZoom);
 
             // centrar en la zona de inicio del jugador (si esta definida y existe)
             Vector2 center = new Vector2(m.Origin.x + mapW * 0.5f, m.Origin.y + mapH * 0.5f);

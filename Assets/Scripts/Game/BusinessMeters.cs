@@ -60,5 +60,12 @@ namespace Salada.Game
         }
 
         public void Add(MeterType t, float delta) => Set(t, Get(t) + delta);
+
+        /// <summary>Deja las 4 balanzas en el mismo valor (ej. 50 al terminar el tutorial).</summary>
+        public void SetAll(float value)
+        {
+            Set(MeterType.Hostility, value); Set(MeterType.Reputation, value);
+            Set(MeterType.Happiness, value); Set(MeterType.Profit, value);
+        }
     }
 }

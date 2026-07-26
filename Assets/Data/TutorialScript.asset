@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26710a84cb94a1c45901f6e7de760bb4, type: 3}
+  m_Name: TutorialScript
+  m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.TutorialScript
+  speaker: {fileID: 11400000, guid: ebb13c032a1ec9f45a1f737e7c4eb783, type: 2}
+  continueLabel: Dale
+  intro: "\xA1Buenas! Soy el encargado. Antes de que te tires a la pileta, dejame
+    que te ensene como funcionan las cosas por aca."
+  givePhone: 'Toma, este celular es tuyo. Con esto vas a manejar todo: poner puestos,
+    ver tus numeros y las zonas. No lo pierdas.'
+  placeFirstStall: Arranquemos. Toca el boton de construir un puesto simple y coloca
+    tu primer puesto al lado de la puerta.
+  firstClientComing: "\xA1Perfecto! Mira, ahi viene tu primer cliente. Fijate: tu
+    puesto lo convence solo mientras pasa cerca."
+  saleDone: "\xA1Y ahi esta, tu primera venta! Cuando un cliente junta suficiente,
+    te compra a vos. Asi ganas plata."
+  statProfit: Estas son tus GANANCIAS, cuanto le sacas a cada producto. Mas alto,
+    mas plata por venta.
+  statHostility: Esta es la HOSTILIDAD, cuanto te odian los competidores. Si sube,
+    se te van a acercar y complicar mas.
+  statReputation: 'Esta es la REPUTACION: cuanto confian los clientes en vos. Con
+    mas reputacion, tus puestos convencen mas rapido.'
+  statHappiness: 'Y este es el AMBIENTE LABORAL: que tan contentos estan tus empleados.
+    A mejor Ambiente,tus puestos atienden mas rapido.'
+  statsWarning: Ojito con estas cuatro, descuidarlas puede traerte problemas serios.
+    Cuidalas o te va a ir mal.
+  rivalAppears: Mira eso... alguien puso un puesto cerca tuyo. Estan queriendo competir
+    con vos. Tene cuidado.
+  rivalStoleClient: "\xBFViste? Te robaron ese cliente. Asi no. Tenemos que hacer
+    algo al respecto."
+  mustCompete: "Primero, meteles presion: pon\xE9 un puesto en la MISMA zona que
+    ellos. Dale, colocalo."
+  explainDispute: 'Ahora abri el menu de ZONAS (el boton nuevo del celu), toca la
+    zona en disputa y elegi ATACAR para romperles el puesto. Es un tira y afloja:
+    macha para ganar. Ojo que atacar te baja un poco la reputacion y te sube la hostilidad.'
+  finish: "\xA1Y listo! Con eso ya sabes todo lo que necesitas para arrancar. El
+    resto lo vas a ir agarrando solo. \xA1Mucha suerte!"
