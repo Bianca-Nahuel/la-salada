@@ -434,6 +434,39 @@ namespace Salada.UI
             AddTooltip(img.gameObject, () => "Opciones");
         }
 
+        // ---- atajos de teclado ----
+        // Tab: sacar/guardar el celu ; 1: construir puesto chico ; R: demoler ; Esc: opciones
+        void HandleShortcuts()
+        {
+            var kb = Keyboard.current;
+            if (kb == null) return;
+
+            if (kb.tabKey.wasPressedThisFrame)
+            {
+                _shown = !_shown;
+                Sfx.Play(_shown ? SfxId.PhonePullOut : SfxId.PhonePutAway);
+            }
+
+            if (kb.digit1Key.wasPressedThisFrame && placement != null && palette != null && palette.Length > 0 && palette[0] != null)
+            {
+                Sfx.Play(SfxId.UIClick);
+                placement.SelectStall(palette[0]); // puesto chico = primero de la paleta
+            }
+
+            if (kb.rKey.wasPressedThisFrame && placement != null)
+            {
+                Sfx.Play(SfxId.UIClick);
+                placement.EnterDemolishMode();
+            }
+
+            // Esc para ABRIR: GameOptionsPopup ya maneja Esc para cerrarse mientras esta visible.
+            if (kb.escapeKey.wasPressedThisFrame && _options != null && !_options.IsShowing)
+            {
+                Sfx.Play(SfxId.UIClick);
+                _options.Show();
+            }
+        }
+
         void OnAction()
         {
             if (waves == null) return;
@@ -544,6 +577,8 @@ namespace Salada.UI
         void Update()
         {
             if (!Application.isPlaying) return; // en edicion se ve estatico (para acomodar iconos)
+
+            HandleShortcuts();
 
             // en modo ver-zonas / construir / demoler, si el mouse se acerca al celu se retrae
             // solo para no estorbar (sin cambiar el estado manual _shown); al salir, vuelve.
