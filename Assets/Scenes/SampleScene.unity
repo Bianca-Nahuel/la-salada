@@ -840,10 +840,11 @@ MonoBehaviour:
   baseClients: 12
   perWaveIncrement: 3
   waveDuration: 45
-  clientSpeed: 1.8
+  clientSpeed: 2.4
   convinceThreshold: 100
   clientSize: 0.5
   clientColor: {r: 0.15, g: 0.35, b: 0.95, a: 1}
+  clientSkins: {fileID: 11400000, guid: 6bb0a51542b30f54a802957793fa6dfd, type: 2}
   buyPauseDuration: 1
   convinceDecayPerSec: 5
   centerRusherChance: 0.35
