@@ -487,8 +487,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Salada.UI.MainMenuUI
   font: {fileID: 12800000, guid: 94178235cab7656419756d9a8be9cb38, type: 3}
+  phoneFrame: {fileID: 21300000, guid: 7d4fc1ce84bfa6842be90755702cd04f, type: 3}
+  phoneScreen: {fileID: 21300000, guid: 47bbf7ff3b4954e4ea9a17515c52823c, type: 3}
+  characters:
+  - {fileID: 21300000, guid: 49401efc3458f8e438cc0750c0b5a5b9, type: 3}
+  - {fileID: 21300000, guid: 96fd67826cfadb643b7d33b7266bd821, type: 3}
+  - {fileID: 21300000, guid: 950865b20876f564495eab5f4dffd08a, type: 3}
   gameScene: SampleScene
   background: {r: 0.06, g: 0.3, b: 0.52, a: 1}
+  phoneHeightFrac: 0.96
+  gapRange: {x: 1.6, y: 4.5}
+  slideDur: 0.5
+  holdRange: {x: 1, y: 2.6}
+  charHeight: 700
+  peekFrac: 0.62
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

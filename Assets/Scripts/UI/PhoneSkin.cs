@@ -15,6 +15,9 @@ namespace Salada.UI
         [Header("Construir / demoler")]
         public Sprite build1, build2, build3, demolish;
 
+        [Header("Otros botones")]
+        public Sprite zones;    // boton de ver zonas
+
         [Header("Medidores (vacio = icono, color = relleno)")]
         public Sprite hostilVacio, hostilColor;         // hostilidad (rojo)
         public Sprite reputacionVacio, reputacionColor; // opiniones (azul)

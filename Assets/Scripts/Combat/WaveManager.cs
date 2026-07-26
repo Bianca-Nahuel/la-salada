@@ -368,7 +368,7 @@ namespace Salada.Combat
                 int reward = Mathf.RoundToInt(saleReward * mult); // profit + efectos
                 Money += reward;
                 SalesWon++;
-                FloatingText.Spawn(c.transform.position, "+$" + reward, grid.playerColor);
+                c.SetArrivalText("+$" + reward, grid.playerColor); // el cartelito aparece cuando el cliente llega al puesto
                 if (_meters != null) ApplyPlayerSaleMeters(c);
                 RegisterSteals(c);
             }

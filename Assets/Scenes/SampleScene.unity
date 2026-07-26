@@ -556,6 +556,55 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!1 &685951184
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 685951185}
+  - component: {fileID: 685951186}
+  m_Layer: 0
+  m_Name: GameOptionsPopup
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &685951185
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 685951184}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1770848653}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &685951186
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 685951184}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 248d5debf091b5045aa41f005acb2257, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Salada.UI.GameOptionsPopup
+  mainMenuScene: MainMenu
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -638,7 +687,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: -3.6106873}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1108250165
@@ -1013,6 +1062,40 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 033ba163611aba44e94093e4726211e5, type: 2}
   - {fileID: 11400000, guid: 29206da80e545964b98add3c7d9ca1f3, type: 2}
   skin: {fileID: 11400000, guid: ca2ee7f5d20714849b4f881bc5876b91, type: 2}
+  savedLayout:
+  - name: Build_0
+    min: {x: 0.02, y: 0.5761206}
+    max: {x: 0.3, y: 0.7261207}
+  - name: Build_1
+    min: {x: 0.36, y: 0.5761206}
+    max: {x: 0.64, y: 0.72612065}
+  - name: Build_2
+    min: {x: 0.7, y: 0.5761206}
+    max: {x: 0.98, y: 0.72612065}
+  - name: Demoler
+    min: {x: 0.02, y: 0.3661206}
+    max: {x: 0.3, y: 0.5161206}
+  - name: Meter_Ganancias
+    min: {x: 0.7, y: 0.3661206}
+    max: {x: 0.98, y: 0.5161206}
+  - name: Meter_Hostilidad
+    min: {x: 0.02, y: 0.1894215}
+    max: {x: 0.3, y: 0.3394215}
+  - name: Meter_Reputacion
+    min: {x: 0.36, y: 0.18942153}
+    max: {x: 0.64, y: 0.3394215}
+  - name: Meter_ClimaLaboral
+    min: {x: 0.7, y: 0.18942153}
+    max: {x: 0.98, y: 0.3394215}
+  - name: Wave
+    min: {x: 0.36, y: 0.011178654}
+    max: {x: 0.64, y: 0.16117865}
+  - name: Zonas
+    min: {x: 0.02, y: 0.011178587}
+    max: {x: 0.3, y: 0.16117859}
+  - name: Opciones
+    min: {x: 0.7, y: 0.011178654}
+    max: {x: 0.98, y: 0.16117865}
   width: 320
   slideSpeed: 8
   peek: 46
@@ -1253,6 +1336,7 @@ RectTransform:
   - {fileID: 200373247}
   - {fileID: 1759415790}
   - {fileID: 1108250164}
+  - {fileID: 685951185}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}

@@ -24,6 +24,13 @@ namespace Salada.UI
         [SerializeField] private WaveManager waves;
         [SerializeField] private StallData[] palette;
         [SerializeField] private PhoneSkin skin;
+
+        // disposicion guardada de los botones (persiste). Vacia = usa las posiciones del codigo.
+        // El celu se re-arma por codigo cada vez (para que los clicks funcionen tras Play), pero
+        // aplica estas posiciones si existen. Se llena con "Guardar disposicion actual".
+        [System.Serializable]
+        private struct NamedRect { public string name; public Vector2 min; public Vector2 max; }
+        [SerializeField, HideInInspector] private List<NamedRect> savedLayout = new List<NamedRect>();
         private BusinessMeters _meters;
         private GameEffects _effects;
 
@@ -45,7 +52,10 @@ namespace Salada.UI
         private Text _clockText;    // gastos + % del mapa que dominas (linea de abajo, mas chica)
         private TerritoryManager _territory;   // para el % de dominancia
         private TerritoryController _zoneView; // modo "ver zonas"
+        private GameOptionsPopup _options;     // menu de opciones (salir/reanudar)
         private Canvas _canvas;                // para saber la zona del celu en pantalla (auto-retraer)
+        private bool _prevInterfere;           // estaba en modo construir/demoler/zona el frame anterior
+        private bool _leftPhoneSinceMode;      // el mouse ya salio del celu desde que entraste al modo
         private RectTransform _moneyPill;      // plata siempre visible (cuando el celu esta escondido)
         private Text _moneyPillText;
 
@@ -82,9 +92,37 @@ namespace Salada.UI
             }
         }
 
-        void OnEnable()
+        // feedback visual de un boton: normal apagadito, hover ilumina, click se hunde/oscurece
+        private class ButtonFeedback : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler,
+            IPointerDownHandler, IPointerUpHandler
         {
-            // limpiar hijos viejos y reconstruir (asi los cambios de codigo se ven en edicion)
+            public Image img;
+            private Color _base = Color.white; // color base (blanco = activo, gris = deshabilitado)
+            private bool _hover, _press;
+
+            public void SetBase(Color c) { _base = c; Apply(); }
+            void Start() { Apply(); }
+
+            void Apply()
+            {
+                if (img == null) return;
+                float mul = _press ? 0.72f : _hover ? 1f : 0.9f; // hover a full = "se ilumina" respecto al 0.9 normal
+                img.color = new Color(_base.r * mul, _base.g * mul, _base.b * mul, _base.a);
+                float s = _press ? 0.94f : _hover ? 1.06f : 1f;
+                img.rectTransform.localScale = new Vector3(s, s, 1f);
+            }
+
+            public void OnPointerEnter(PointerEventData e) { _hover = true; Apply(); }
+            public void OnPointerExit(PointerEventData e) { _hover = false; _press = false; Apply(); }
+            public void OnPointerDown(PointerEventData e) { _press = true; Apply(); }
+            public void OnPointerUp(PointerEventData e) { _press = false; Apply(); }
+        }
+
+        void OnEnable() => Rebuild();
+
+        // re-arma todo el celu por codigo (los clicks/tooltips se recablean; aplica savedLayout si hay)
+        void Rebuild()
+        {
             _meterList.Clear(); _buyButtons.Clear();
             for (int i = transform.childCount - 1; i >= 0; i--)
             {
@@ -97,9 +135,74 @@ namespace Salada.UI
             _effects = FindAnyObjectByType<GameEffects>();
             _territory = FindAnyObjectByType<TerritoryManager>();
             _zoneView = FindAnyObjectByType<TerritoryController>();
+            _options = FindAnyObjectByType<GameOptionsPopup>(FindObjectsInactive.Include);
             _canvas = GetComponentInParent<Canvas>();
             _font = skin != null && skin.font != null ? skin.font : UIFont.Get();
             BuildPhone();
+        }
+
+        // nombres de los elementos cuya posicion se puede guardar/mover
+        static readonly string[] LayoutNames =
+            { "Build_0", "Build_1", "Build_2", "Demoler", "Meter_Ganancias", "Meter_Hostilidad",
+              "Meter_Reputacion", "Meter_ClimaLaboral", "Wave", "Zonas", "Opciones" };
+
+        bool TryGetSaved(string name, out Vector2 min, out Vector2 max)
+        {
+            if (savedLayout != null)
+                foreach (var e in savedLayout)
+                    if (e.name == name) { min = e.min; max = e.max; return true; }
+            min = max = Vector2.zero; return false;
+        }
+
+        [ContextMenu("Guardar disposicion actual")]
+        void CaptureLayout()
+        {
+            Canvas.ForceUpdateCanvases();
+            savedLayout.Clear();
+            foreach (var name in LayoutNames)
+            {
+                var rt = FindDeep(transform, name);
+                if (rt == null) continue;
+                EffectiveAnchors(rt, out var min, out var max);
+                savedLayout.Add(new NamedRect { name = name, min = min, max = max });
+            }
+#if UNITY_EDITOR
+            UnityEditor.EditorUtility.SetDirty(this);
+            if (gameObject.scene.IsValid()) UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
+#endif
+            Rebuild(); // aplicar ya
+        }
+
+        [ContextMenu("Reconstruir (borrar disposicion guardada)")]
+        void ClearLayout()
+        {
+            savedLayout.Clear();
+#if UNITY_EDITOR
+            UnityEditor.EditorUtility.SetDirty(this);
+            if (gameObject.scene.IsValid()) UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
+#endif
+            Rebuild();
+        }
+
+        static RectTransform FindDeep(Transform root, string name)
+        {
+            foreach (Transform c in root)
+            {
+                if (c.name == name) return c as RectTransform;
+                var r = FindDeep(c, name);
+                if (r != null) return r;
+            }
+            return null;
+        }
+
+        // fraccion efectiva del rect (contempla que se haya movido por offsets al arrastrar)
+        static void EffectiveAnchors(RectTransform rt, out Vector2 min, out Vector2 max)
+        {
+            var parent = rt.parent as RectTransform;
+            Vector2 ps = parent != null ? parent.rect.size : Vector2.one;
+            float ix = ps.x != 0f ? 1f / ps.x : 0f, iy = ps.y != 0f ? 1f / ps.y : 0f;
+            min = rt.anchorMin + new Vector2(rt.offsetMin.x * ix, rt.offsetMin.y * iy);
+            max = rt.anchorMax + new Vector2(rt.offsetMax.x * ix, rt.offsetMax.y * iy);
         }
 
         void BuildPhone()
@@ -130,6 +233,7 @@ namespace Salada.UI
             BuildGrid(screen);
             BuildWaveButton(screen);
             BuildZoneButton(screen);
+            BuildOptionsButton(screen);
             BuildMoneyPill(); // plata siempre visible aunque se oculte el celu
             if (Application.isEditor) BuildDebugButton();
             BuildTooltip(); // ultimo: se dibuja encima de todo
@@ -167,75 +271,95 @@ namespace Salada.UI
         // ---- grilla celu 1: 3 columnas x 3 filas ----
         // fila0: construir 1/2/3 ; fila1: demoler / (logo) / profit ; fila2: hostil / opiniones / clima
 
+        // grilla uniforme: 3 columnas (mismo ancho) x 4 filas (misma altura y mismo gap).
+        // build2 y oleada quedan en la columna del centro (X = 0.50); demoler en la fila del logo.
+        // columnas
+        const float ColL0 = 0.02f, ColL1 = 0.30f;   // izquierda
+        const float ColC0 = 0.36f, ColC1 = 0.64f;   // centro (centro exacto = 0.50)
+        const float ColR0 = 0.70f, ColR1 = 0.98f;   // derecha
+        // filas (alto 0.15, gap 0.06)
+        const float Row1_0 = 0.65f, Row1_1 = 0.80f; // construir 1/2/3
+        const float Row2_0 = 0.44f, Row2_1 = 0.59f; // demoler / (logo) / profit
+        const float Row3_0 = 0.23f, Row3_1 = 0.38f; // medidores hostil / reput / clima
+        const float Row4_0 = 0.02f, Row4_1 = 0.17f; // zonas / oleada
+
         void BuildGrid(RectTransform screen)
         {
-            // posiciones (fracciones dentro de la pantalla). Ajustadas a mano por el usuario.
-            AddBuild(screen, 0, skin != null ? skin.build1 : null, 0.020f, 0.570f, 0.310f, 0.720f);
-            AddBuild(screen, 1, skin != null ? skin.build2 : null, 0.355f, 0.570f, 0.645f, 0.720f);
-            AddBuild(screen, 2, skin != null ? skin.build3 : null, 0.710f, 0.570f, 1.000f, 0.720f);
+            AddBuild(screen, 0, skin != null ? skin.build1 : null, ColL0, Row1_0, ColL1, Row1_1);
+            AddBuild(screen, 1, skin != null ? skin.build2 : null, ColC0, Row1_0, ColC1, Row1_1);
+            AddBuild(screen, 2, skin != null ? skin.build3 : null, ColR0, Row1_0, ColR1, Row1_1);
 
-            _demolishImg = SpriteButton(CellAt(screen, 0.020f, 0.360f, 0.310f, 0.510f), skin != null ? skin.demolish : null, () => placement.EnterDemolishMode());
+            _demolishImg = SpriteButton(screen, "Demoler", skin != null ? skin.demolish : null, ColL0, Row2_0, ColL1, Row2_1, () => placement.EnterDemolishMode());
             AddTooltip(_demolishImg.gameObject, () => "Demoler puesto");
+            // (columna del centro de la fila 2 = el logo del celu, va en el arte del marco)
+            AddMeter(screen, "Meter_Ganancias", ColR0, Row2_0, ColR1, Row2_1, skin?.profitVacio, skin?.profitColor, "Ganancias", () => _meters != null ? _meters.profit : 0f);
 
-            AddMeter(CellAt(screen, 0.690f, 0.360f, 0.980f, 0.510f), skin?.profitVacio, skin?.profitColor, "Ganancias", () => _meters != null ? _meters.profit : 0f);
-            AddMeter(CellAt(screen, 0.023f, 0.194f, 0.313f, 0.344f), skin?.hostilVacio, skin?.hostilColor, "Hostilidad", () => _meters != null ? _meters.hostility : 0f);
-            AddMeter(CellAt(screen, 0.358f, 0.194f, 0.648f, 0.344f), skin?.reputacionVacio, skin?.reputacionColor, "Reputacion", () => _meters != null ? _meters.reputation : 0f);
-            AddMeter(CellAt(screen, 0.693f, 0.194f, 0.983f, 0.344f), skin?.felicidadVacio, skin?.felicidadColor, "Clima laboral", () => _meters != null ? _meters.happiness : 0f);
+            AddMeter(screen, "Meter_Hostilidad", ColL0, Row3_0, ColL1, Row3_1, skin?.hostilVacio, skin?.hostilColor, "Hostilidad", () => _meters != null ? _meters.hostility : 0f);
+            AddMeter(screen, "Meter_Reputacion", ColC0, Row3_0, ColC1, Row3_1, skin?.reputacionVacio, skin?.reputacionColor, "Reputacion", () => _meters != null ? _meters.reputation : 0f);
+            AddMeter(screen, "Meter_ClimaLaboral", ColR0, Row3_0, ColR1, Row3_1, skin?.felicidadVacio, skin?.felicidadColor, "Clima laboral", () => _meters != null ? _meters.happiness : 0f);
         }
 
         // capturamos 'data' en una variable local (no la del for) para que cada boton apunte a su puesto
         void AddBuild(RectTransform screen, int idx, Sprite sprite, float x0, float y0, float x1, float y1)
         {
             StallData data = (palette != null && idx < palette.Length) ? palette[idx] : null;
-            var img = SpriteButton(CellAt(screen, x0, y0, x1, y1), sprite, () => { if (data != null) placement.SelectStall(data); });
+            var img = SpriteButton(screen, "Build_" + idx, sprite, x0, y0, x1, y1, () => { if (data != null) placement.SelectStall(data); });
             if (data != null) _buyButtons.Add((img, data));
             AddTooltip(img.gameObject, () => data != null ? $"{data.displayName}  -  ${data.cost}" : "Puesto");
         }
 
-        RectTransform CellAt(RectTransform screen, float x0, float y0, float x1, float y1)
+        // como Place, pero si hay una disposicion guardada para 'name' usa esa
+        void PlaceSaved(RectTransform rt, string name, float x0, float y0, float x1, float y1)
         {
-            var rt = new GameObject("Cell", typeof(RectTransform)).GetComponent<RectTransform>();
-            rt.SetParent(screen, false);
-            Place(rt, x0, y0, x1, y1);
-            return rt;
+            if (TryGetSaved(name, out var min, out var max)) { rt.anchorMin = min; rt.anchorMax = max; }
+            else { rt.anchorMin = new Vector2(x0, y0); rt.anchorMax = new Vector2(x1, y1); }
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
         }
 
-        Image SpriteButton(RectTransform cell, Sprite sprite, UnityEngine.Events.UnityAction onClick)
+        // el boton ES el objeto nombrado y posicionado (para que al arrastrarlo se guarde su posicion)
+        Image SpriteButton(RectTransform parent, string name, Sprite sprite, float x0, float y0, float x1, float y1, UnityEngine.Events.UnityAction onClick)
         {
-            var go = new GameObject("Btn", typeof(RectTransform), typeof(Image), typeof(Button));
-            go.transform.SetParent(cell, false);
-            Stretch(go.GetComponent<RectTransform>());
+            var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+            go.transform.SetParent(parent, false);
+            PlaceSaved(go.GetComponent<RectTransform>(), name, x0, y0, x1, y1);
             var img = go.GetComponent<Image>();
             img.sprite = sprite; img.color = Color.white; img.preserveAspect = true;
             go.GetComponent<Button>().onClick.AddListener(onClick);
+            go.AddComponent<ButtonFeedback>().img = img; // hover ilumina + click se hunde
             return img;
         }
 
-        // medidor: fondo tenue (delimita el cuadrado) + relleno (color) que sube segun el valor + icono (vacio) por encima
-        void AddMeter(RectTransform cell, Sprite vacio, Sprite color, string label, Func<float> getter)
+        // medidor: contenedor nombrado/posicionado (es lo que se arrastra, con raycast propio invisible)
+        // + fondo tenue + relleno (color) que sube segun el valor + icono (vacio) por encima
+        void AddMeter(RectTransform parent, string name, float x0, float y0, float x1, float y1, Sprite vacio, Sprite color, string label, Func<float> getter)
         {
-            // fondo: el mismo color pero transparente, para ver el cuadrado completo (lo que falta llenar)
+            var cont = new GameObject(name, typeof(RectTransform), typeof(Image)).GetComponent<RectTransform>();
+            cont.SetParent(parent, false);
+            PlaceSaved(cont, name, x0, y0, x1, y1);
+            var contImg = cont.GetComponent<Image>();
+            contImg.color = new Color(0f, 0f, 0f, 0f); contImg.raycastTarget = true; // invisible pero agarra el mouse (hover/arrastre)
+
             var bgGo = new GameObject("Fondo", typeof(RectTransform), typeof(Image));
-            bgGo.transform.SetParent(cell, false);
+            bgGo.transform.SetParent(cont, false);
             Stretch(bgGo.GetComponent<RectTransform>());
             var bg = bgGo.GetComponent<Image>();
             bg.sprite = color; bg.color = new Color(1f, 1f, 1f, 0.28f); bg.preserveAspect = true; bg.raycastTarget = false;
 
             var fillGo = new GameObject("Fill", typeof(RectTransform), typeof(Image));
-            fillGo.transform.SetParent(cell, false);
+            fillGo.transform.SetParent(cont, false);
             Stretch(fillGo.GetComponent<RectTransform>());
             var fill = fillGo.GetComponent<Image>();
-            fill.sprite = color; fill.color = Color.white; fill.preserveAspect = true;
+            fill.sprite = color; fill.color = Color.white; fill.preserveAspect = true; fill.raycastTarget = false;
             fill.type = Image.Type.Filled; fill.fillMethod = Image.FillMethod.Vertical;
             fill.fillOrigin = (int)Image.OriginVertical.Bottom; fill.fillAmount = 0f;
 
             var iconGo = new GameObject("Icono", typeof(RectTransform), typeof(Image));
-            iconGo.transform.SetParent(cell, false);
+            iconGo.transform.SetParent(cont, false);
             Stretch(iconGo.GetComponent<RectTransform>());
             var icon = iconGo.GetComponent<Image>();
             icon.sprite = vacio; icon.color = Color.white; icon.preserveAspect = true; icon.raycastTarget = false;
 
-            AddTooltip(fillGo, () => $"{label}: {Mathf.RoundToInt(getter())}");
+            AddTooltip(cont.gameObject, () => $"{label}: {Mathf.RoundToInt(getter())}");
             _meterList.Add(new Meter { fill = fill, getter = getter });
         }
 
@@ -245,11 +369,12 @@ namespace Salada.UI
         {
             var go = new GameObject("Wave", typeof(RectTransform), typeof(Image), typeof(Button));
             go.transform.SetParent(screen, false);
-            Place(go.GetComponent<RectTransform>(), 0.370f, 0.008f, 0.630f, 0.173f);
+            PlaceSaved(go.GetComponent<RectTransform>(), "Wave", ColC0, Row4_0, ColC1, Row4_1); // centro, fila de abajo
             _waveImg = go.GetComponent<Image>();
             _waveImg.color = Color.white; _waveImg.preserveAspect = true;
             if (skin != null) _waveImg.sprite = skin.wavePlay;
             go.GetComponent<Button>().onClick.AddListener(OnAction);
+            go.AddComponent<ButtonFeedback>().img = _waveImg; // hover ilumina + click se hunde
             AddTooltip(go, WaveTooltip);
         }
 
@@ -279,13 +404,22 @@ namespace Salada.UI
             go.SetActive(false);
         }
 
-        // boton "sin logo" (por ahora) a la izquierda del de oleada: abre el modo ver-zonas
+        // boton de ver-zonas (izquierda, fila de abajo) con su sprite
         void BuildZoneButton(RectTransform screen)
         {
-            var img = SpriteButton(CellAt(screen, 0.050f, 0.008f, 0.300f, 0.173f), null,
+            var img = SpriteButton(screen, "Zonas", skin != null ? skin.zones : null, ColL0, Row4_0, ColL1, Row4_1,
                 () => { if (_zoneView != null) _zoneView.ToggleZoneView(); });
-            img.color = new Color(0.75f, 0.78f, 0.85f, 0.92f); // caja neutra (todavia sin icono)
             AddTooltip(img.gameObject, () => _zoneView != null && _zoneView.Active ? "Cerrar mapa de zonas" : "Ver zonas (facciones)");
+        }
+
+        // boton de opciones del juego (derecha, fila de abajo) - sin sprite propio por ahora
+        void BuildOptionsButton(RectTransform screen)
+        {
+            var img = SpriteButton(screen, "Opciones", null, ColR0, Row4_0, ColR1, Row4_1,
+                () => { if (_options != null) _options.Show(); });
+            var fb = img.GetComponent<ButtonFeedback>();
+            if (fb != null) fb.SetBase(new Color(0.80f, 0.82f, 0.88f)); // caja neutra (todavia sin icono)
+            AddTooltip(img.gameObject, () => "Opciones");
         }
 
         void OnAction()
@@ -403,7 +537,14 @@ namespace Salada.UI
             // solo para no estorbar (sin cambiar el estado manual _shown); al salir, vuelve.
             bool interfereMode = (_zoneView != null && _zoneView.Active)
                 || (placement != null && placement.CurrentMode != PlacementController.Mode.Idle);
-            bool shown = interfereMode && MouseOverPhoneArea() ? false : _shown;
+            // al ENTRAR al modo no se retrae hasta que el mouse salga del celu por primera vez
+            // (asi no se esconde de una al tocar un boton, que deja el mouse encima del celu).
+            if (interfereMode && !_prevInterfere) _leftPhoneSinceMode = false;
+            if (!interfereMode) _leftPhoneSinceMode = false;
+            if (!MouseOverPhoneArea()) _leftPhoneSinceMode = true;
+            _prevInterfere = interfereMode;
+            bool autoHide = interfereMode && _leftPhoneSinceMode && MouseOverPhoneArea();
+            bool shown = autoHide ? false : _shown;
 
             // escondido: baja dejando ver un pedacito (peek) arriba; desplegado: pegado abajo
             float targetY = shown ? 0f : -(width * FrameAspect - peek);
@@ -471,7 +612,9 @@ namespace Salada.UI
         static void Dim(Image img, bool enabled)
         {
             var b = img.GetComponent<Button>(); if (b != null) b.interactable = enabled;
-            img.color = enabled ? Color.white : new Color(0.5f, 0.5f, 0.5f, 0.7f);
+            var c = enabled ? Color.white : new Color(0.5f, 0.5f, 0.5f, 0.7f);
+            var fb = img.GetComponent<ButtonFeedback>();
+            if (fb != null) fb.SetBase(c); else img.color = c;
         }
     }
 }

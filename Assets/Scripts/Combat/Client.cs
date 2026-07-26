@@ -48,6 +48,12 @@ namespace Salada.Combat
         private bool _sold;
         private float _pauseTimer;
 
+        // cartelito "+$X" que se muestra recien cuando el cliente LLEGA al puesto (no al concretar)
+        private string _arrivalText; private Color _arrivalColor; private bool _hasArrivalText;
+
+        /// <summary>Deja preparado un cartelito para mostrar cuando el cliente llegue al puesto.</summary>
+        public void SetArrivalText(string text, Color color) { _arrivalText = text; _arrivalColor = color; _hasArrivalText = true; }
+
         public bool IsTargetable => !_sold;
         public float TotalConvince => _total;
 
@@ -258,7 +264,12 @@ namespace Salada.Combat
             _state = State.Approaching;
         }
 
-        void StartPause() { _state = State.Pausing; _pauseTimer = _pauseDuration; }
+        void StartPause()
+        {
+            _state = State.Pausing; _pauseTimer = _pauseDuration;
+            // el cliente llego al puesto: ahora si mostramos el cartelito de la venta
+            if (_hasArrivalText) { FloatingText.Spawn(transform.position, _arrivalText, _arrivalColor); _hasArrivalText = false; }
+        }
 
         void BeginLeaving()
         {
