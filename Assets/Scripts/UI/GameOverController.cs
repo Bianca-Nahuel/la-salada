@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using Salada.Audio;
 
 namespace Salada.UI
 {
@@ -60,6 +61,7 @@ namespace Salada.UI
             EnsureBuilt();
             for (int i = _content.childCount - 1; i >= 0; i--) Destroy(_content.GetChild(i).gameObject);
 
+            Sfx.Play(isWin ? SfxId.GameWin : SfxId.GameOver);
             var accent = isWin ? new Color(0.35f, 0.9f, 0.4f) : new Color(0.95f, 0.35f, 0.3f);
             _panelImage.color = isWin ? new Color(0.05f, 0.14f, 0.06f, 1f) : new Color(0.16f, 0.05f, 0.05f, 1f);
             string defaultMsg = isWin ? "Le diste vuelta a La Salada." : "Se acabo la salada para vos.";

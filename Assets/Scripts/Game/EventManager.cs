@@ -5,6 +5,7 @@ using UnityEngine;
 using Salada.Combat;
 using Salada.Placement;
 using Salada.UI;
+using Salada.Audio;
 
 namespace Salada.Game
 {
@@ -261,6 +262,7 @@ namespace Salada.Game
             if (biggest == null) return;
             var removed = _grid.Model.Remove(biggest.OriginCell);
             if (removed?.View != null) Destroy(removed.View);
+            Sfx.Play(SfxId.StallDestroyed);
         }
 
         // ---- Debug ----

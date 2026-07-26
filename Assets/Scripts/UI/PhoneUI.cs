@@ -7,6 +7,7 @@ using UnityEngine.InputSystem;
 using Salada.Placement;
 using Salada.Combat;
 using Salada.Game;
+using Salada.Audio;
 
 namespace Salada.UI
 {
@@ -66,7 +67,14 @@ namespace Salada.UI
         static readonly float[] Speeds = { 1f, 2f, 5f }; // sin x0.5
 
         // medidores
-        private class Meter { public Image fill; public Func<float> getter; }
+        private class Meter
+        {
+            public Image fill;
+            public Image icon;
+            public Func<float> getter;
+            public Func<float, bool> isWarning; // null = este medidor no tiene advertencia
+            public bool wasWarning;
+        }
         private readonly List<Meter> _meterList = new List<Meter>();
 
         // construir
@@ -112,7 +120,7 @@ namespace Salada.UI
                 img.rectTransform.localScale = new Vector3(s, s, 1f);
             }
 
-            public void OnPointerEnter(PointerEventData e) { _hover = true; Apply(); }
+            public void OnPointerEnter(PointerEventData e) { _hover = true; Apply(); Sfx.Play(SfxId.UIHover); }
             public void OnPointerExit(PointerEventData e) { _hover = false; _press = false; Apply(); }
             public void OnPointerDown(PointerEventData e) { _press = true; Apply(); }
             public void OnPointerUp(PointerEventData e) { _press = false; Apply(); }
@@ -221,7 +229,11 @@ namespace Salada.UI
             var toggle = GetComponent<Button>() ?? gameObject.AddComponent<Button>();
             toggle.transition = Selectable.Transition.None;
             toggle.onClick.RemoveAllListeners();
-            toggle.onClick.AddListener(() => _shown = !_shown);
+            toggle.onClick.AddListener(() =>
+            {
+                _shown = !_shown;
+                Sfx.Play(_shown ? SfxId.PhonePullOut : SfxId.PhonePutAway);
+            });
 
             // pantalla (area util dentro del marco)
             var screen = new GameObject("Screen", typeof(RectTransform)).GetComponent<RectTransform>();
@@ -294,9 +306,9 @@ namespace Salada.UI
             // (columna del centro de la fila 2 = el logo del celu, va en el arte del marco)
             AddMeter(screen, "Meter_Ganancias", ColR0, Row2_0, ColR1, Row2_1, skin?.profitVacio, skin?.profitColor, "Ganancias", () => _meters != null ? _meters.profit : 0f);
 
-            AddMeter(screen, "Meter_Hostilidad", ColL0, Row3_0, ColL1, Row3_1, skin?.hostilVacio, skin?.hostilColor, "Hostilidad", () => _meters != null ? _meters.hostility : 0f);
-            AddMeter(screen, "Meter_Reputacion", ColC0, Row3_0, ColC1, Row3_1, skin?.reputacionVacio, skin?.reputacionColor, "Reputacion", () => _meters != null ? _meters.reputation : 0f);
-            AddMeter(screen, "Meter_ClimaLaboral", ColR0, Row3_0, ColR1, Row3_1, skin?.felicidadVacio, skin?.felicidadColor, "Clima laboral", () => _meters != null ? _meters.happiness : 0f);
+            AddMeter(screen, "Meter_Hostilidad", ColL0, Row3_0, ColL1, Row3_1, skin?.hostilVacio, skin?.hostilColor, "Hostilidad", () => _meters != null ? _meters.hostility : 0f, v => v > 80f);
+            AddMeter(screen, "Meter_Reputacion", ColC0, Row3_0, ColC1, Row3_1, skin?.reputacionVacio, skin?.reputacionColor, "Reputacion", () => _meters != null ? _meters.reputation : 0f, v => v < 20f);
+            AddMeter(screen, "Meter_ClimaLaboral", ColR0, Row3_0, ColR1, Row3_1, skin?.felicidadVacio, skin?.felicidadColor, "Clima laboral", () => _meters != null ? _meters.happiness : 0f, v => v < 20f);
         }
 
         // capturamos 'data' en una variable local (no la del for) para que cada boton apunte a su puesto
@@ -324,14 +336,14 @@ namespace Salada.UI
             PlaceSaved(go.GetComponent<RectTransform>(), name, x0, y0, x1, y1);
             var img = go.GetComponent<Image>();
             img.sprite = sprite; img.color = Color.white; img.preserveAspect = true;
-            go.GetComponent<Button>().onClick.AddListener(onClick);
+            go.GetComponent<Button>().onClick.AddListener(Sfx.WithClick(onClick));
             go.AddComponent<ButtonFeedback>().img = img; // hover ilumina + click se hunde
             return img;
         }
 
         // medidor: contenedor nombrado/posicionado (es lo que se arrastra, con raycast propio invisible)
         // + fondo tenue + relleno (color) que sube segun el valor + icono (vacio) por encima
-        void AddMeter(RectTransform parent, string name, float x0, float y0, float x1, float y1, Sprite vacio, Sprite color, string label, Func<float> getter)
+        void AddMeter(RectTransform parent, string name, float x0, float y0, float x1, float y1, Sprite vacio, Sprite color, string label, Func<float> getter, Func<float, bool> isWarning = null)
         {
             var cont = new GameObject(name, typeof(RectTransform), typeof(Image)).GetComponent<RectTransform>();
             cont.SetParent(parent, false);
@@ -360,7 +372,7 @@ namespace Salada.UI
             icon.sprite = vacio; icon.color = Color.white; icon.preserveAspect = true; icon.raycastTarget = false;
 
             AddTooltip(cont.gameObject, () => $"{label}: {Mathf.RoundToInt(getter())}");
-            _meterList.Add(new Meter { fill = fill, getter = getter });
+            _meterList.Add(new Meter { fill = fill, icon = icon, getter = getter, isWarning = isWarning });
         }
 
         // ---- boton de oleada (cuadrado, cambia de sprite) ----
@@ -373,7 +385,7 @@ namespace Salada.UI
             _waveImg = go.GetComponent<Image>();
             _waveImg.color = Color.white; _waveImg.preserveAspect = true;
             if (skin != null) _waveImg.sprite = skin.wavePlay;
-            go.GetComponent<Button>().onClick.AddListener(OnAction);
+            go.GetComponent<Button>().onClick.AddListener(Sfx.WithClick(OnAction));
             go.AddComponent<ButtonFeedback>().img = _waveImg; // hover ilumina + click se hunde
             AddTooltip(go, WaveTooltip);
         }
@@ -589,7 +601,21 @@ namespace Salada.UI
 
             // medidores (relleno de abajo hacia arriba)
             foreach (var m in _meterList)
-                if (m.fill != null) m.fill.fillAmount = Mathf.Clamp01(m.getter() / 100f);
+            {
+                float v = m.getter();
+                if (m.fill != null) m.fill.fillAmount = Mathf.Clamp01(v / 100f);
+
+                // advertencia: hostilidad > 80 o reputacion/felicidad < 20 -> titila el icono y suena una vez al entrar
+                if (m.isWarning != null && m.icon != null)
+                {
+                    bool bad = m.isWarning(v);
+                    if (bad && !m.wasWarning) Sfx.Play(SfxId.Warning);
+                    m.wasWarning = bad;
+                    var c = m.icon.color;
+                    c.a = bad ? 0.35f + 0.65f * Mathf.Abs(Mathf.Sin(Time.unscaledTime * 6f)) : 1f;
+                    m.icon.color = c;
+                }
+            }
 
             // construir: habilitado solo en Building y si alcanza la plata (si no, gris)
             if (_demolishImg != null) Dim(_demolishImg, building);

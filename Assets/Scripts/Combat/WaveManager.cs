@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Salada.Placement;
 using Salada.Game;
+using Salada.Audio;
 
 namespace Salada.Combat
 {
@@ -184,6 +185,7 @@ namespace Salada.Combat
             if (CurrentPhase == Phase.WaveActive) return;
             if (WavesToday >= wavesPerDay) return; // dia completo -> AdvanceDay()
             if (_openings == null || _openings.Count < 2) { Debug.LogError("[WaveManager] Sin bocas suficientes."); return; }
+            Sfx.Play(SfxId.NewWaveOrEvent);
             StartCoroutine(RunOneWave());
         }
 
@@ -368,7 +370,12 @@ namespace Salada.Combat
                 int reward = Mathf.RoundToInt(saleReward * mult); // profit + efectos
                 Money += reward;
                 SalesWon++;
-                c.SetArrivalText("+$" + reward, grid.playerColor); // el cartelito aparece cuando el cliente llega al puesto
+                // el cartelito (y el sonido) aparecen recien cuando el cliente llega al puesto
+                c.SetArrivalText("+$" + reward, grid.playerColor, () =>
+                {
+                    Sfx.Play(SfxId.ClientConvinced);
+                    Sfx.Play(SfxId.MoneyGain);
+                });
                 if (_meters != null) ApplyPlayerSaleMeters(c);
                 RegisterSteals(c);
             }

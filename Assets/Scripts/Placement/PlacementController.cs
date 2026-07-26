@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using Salada.Combat;
+using Salada.Audio;
 
 namespace Salada.Placement
 {
@@ -77,8 +78,8 @@ namespace Salada.Placement
                 var kb = Keyboard.current;
                 if (kb != null)
                 {
-                    if (kb.qKey.wasPressedThisFrame) _rot = (_rot + 3) % 4; // Q: rota hacia un lado
-                    if (kb.eKey.wasPressedThisFrame) _rot = (_rot + 1) % 4; // E: rota hacia el otro
+                    if (kb.qKey.wasPressedThisFrame) { _rot = (_rot + 3) % 4; Sfx.Play(SfxId.StallRotate); } // Q: rota hacia un lado
+                    if (kb.eKey.wasPressedThisFrame) { _rot = (_rot + 1) % 4; Sfx.Play(SfxId.StallRotate); } // E: rota hacia el otro
                 }
                 UpdatePlace(cell, overUI, mouse);
             }
@@ -106,8 +107,11 @@ namespace Salada.Placement
             var sprite = footprint == Vector2Int.one ? grid.StallSpriteFor(Owner.Player, Facing) : null;
             ghost.Show(grid.Model.FootprintCenterWorld(cell, footprint), StallSize(footprint), valid, Facing, AttackRange, sprite);
 
-            if (valid && mouse.leftButton.wasPressedThisFrame)
-                DoPlace(cell, footprint, Facing, SelectedStall);
+            if (mouse.leftButton.wasPressedThisFrame)
+            {
+                if (valid) DoPlace(cell, footprint, Facing, SelectedStall);
+                else Sfx.Play(SfxId.StallInvalid);
+            }
         }
 
         void UpdateDemolish(Vector2Int cell, bool overUI, Mouse mouse)
@@ -138,6 +142,7 @@ namespace Salada.Placement
             if (grid.SpawnStall(cell, footprint, Owner.Player, facing, data) != null)
             {
                 _waves?.Spend(data.cost);
+                Sfx.Play(SfxId.StallPlace);
                 CurrentMode = Mode.Idle; // una colocacion por seleccion -> vuelve al control normal
             }
         }
@@ -149,6 +154,7 @@ namespace Salada.Placement
             Salada.Combat.DustBurst.Spawn(grid.Model.CellToWorldCenter(removed.OriginCell)); // polvo al demoler
             if (removed.View != null) Destroy(removed.View);
             _waves?.RefundStall(removed.Cost);
+            Sfx.Play(SfxId.StallDemolish);
             CurrentMode = Mode.Idle; // una demolicion -> vuelve al control normal
         }
 

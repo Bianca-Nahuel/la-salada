@@ -2,6 +2,7 @@ using UnityEngine;
 using Salada.Placement;
 using Salada.Util;
 using Salada.Game;
+using Salada.Audio;
 
 namespace Salada.Combat
 {
@@ -75,6 +76,7 @@ namespace Salada.Combat
             if (target != null)
             {
                 SpawnShot(center, target);
+                Sfx.Play(SfxId.StallAttack);
                 target.TakeDamage(_stall, EffectiveDamage(), _steal);
                 _nextAttack = Time.time + EffectiveCooldown();
             }

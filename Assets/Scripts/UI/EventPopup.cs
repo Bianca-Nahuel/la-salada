@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Salada.Game;
 using Salada.Combat;
+using Salada.Audio;
 
 namespace Salada.UI
 {
@@ -89,6 +90,7 @@ namespace Salada.UI
         public void Show(GameEvent ev, Action<int> onOption, Action onClose)
         {
             _ev = ev; _onOption = onOption; _onClose = onClose;
+            Sfx.Play(SfxId.NewWaveOrEvent);
             SetPortrait(_ev.speaker);
             BuildDescription();
             _root.SetActive(true);
@@ -218,8 +220,9 @@ namespace Salada.UI
             go.GetComponent<Image>().color = interactable ? color : Color.Lerp(color, new Color(0.15f, 0.15f, 0.15f), 0.7f);
             go.AddComponent<LayoutElement>().minHeight = 50;
             var btn = go.GetComponent<Button>();
-            btn.onClick.AddListener(onClick);
+            btn.onClick.AddListener(Sfx.WithClick(onClick));
             btn.interactable = interactable;
+            go.AddComponent<HoverSfx>();
 
             var textGo = new GameObject("Text", typeof(RectTransform), typeof(Text));
             textGo.transform.SetParent(go.transform, false);
