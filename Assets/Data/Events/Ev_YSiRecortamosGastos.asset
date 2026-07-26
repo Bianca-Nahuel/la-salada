@@ -15,7 +15,7 @@ MonoBehaviour:
   id: 6b5a2dad818940a2a3f95cab147e1b3b
   title: "\xBFY si recortamos gastos?"
   speaker: {fileID: 11400000, guid: ebb13c032a1ec9f45a1f737e7c4eb783, type: 2}
-  description: 
+  description: "Estamos medio cortos de guita. \xBFQu\xE9 suger\xEDs?"
   mandatory: 1
   repeatable: 0
   conditions:
