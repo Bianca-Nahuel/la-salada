@@ -18,6 +18,7 @@ MonoBehaviour:
   build3: {fileID: 21300000, guid: 15264c3d031113f4397dd7338b9067c1, type: 3}
   demolish: {fileID: 21300000, guid: 0243e575feb043b48bf46f3768d3799a, type: 3}
   zones: {fileID: 21300000, guid: 61f0d5982591b604a87559f2ba3506d9, type: 3}
+  options: {fileID: 21300000, guid: 62bb5baea95e62b41a96a39ec6c086b0, type: 3}
   hostilVacio: {fileID: 21300000, guid: 8f485dffe88791a4b872f5e9b40cf86c, type: 3}
   hostilColor: {fileID: 21300000, guid: 54cd32a77540cb64e84f4ff57bb6257a, type: 3}
   reputacionVacio: {fileID: 21300000, guid: daf8faa59204b554cbf028ef60e98c0f, type: 3}

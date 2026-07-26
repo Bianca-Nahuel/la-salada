@@ -20,7 +20,7 @@ namespace Salada.Game
         [Tooltip("Arrancar mostrando TODO el mapa (zoom out completo). Si no, usa startZoom.")]
         [SerializeField] private bool startFullView = true;
         [Tooltip("Cuanto se puede ver mas alla del borde del mapa (parte no jugable), en unidades de mundo.")]
-        [SerializeField] private float viewMargin = 2f;
+        [SerializeField] private float viewMargin = 0f;
 
         private Camera _cam;
         private float _maxZoom = 10f;

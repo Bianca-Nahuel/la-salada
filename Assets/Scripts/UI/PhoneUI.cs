@@ -79,6 +79,7 @@ namespace Salada.UI
 
         // construir
         private readonly List<(Image img, StallData data)> _buyButtons = new List<(Image, StallData)>();
+        private readonly List<Image> _lockedButtons = new List<Image>(); // puestos doble/triple (proximamente, siempre bloqueados)
         private Image _demolishImg;
 
         // tooltip (cartelito al pasar el mouse por un icono)
@@ -131,7 +132,7 @@ namespace Salada.UI
         // re-arma todo el celu por codigo (los clicks/tooltips se recablean; aplica savedLayout si hay)
         void Rebuild()
         {
-            _meterList.Clear(); _buyButtons.Clear();
+            _meterList.Clear(); _buyButtons.Clear(); _lockedButtons.Clear();
             for (int i = transform.childCount - 1; i >= 0; i--)
             {
                 var go = transform.GetChild(i).gameObject;
@@ -315,9 +316,19 @@ namespace Salada.UI
         void AddBuild(RectTransform screen, int idx, Sprite sprite, float x0, float y0, float x1, float y1)
         {
             StallData data = (palette != null && idx < palette.Length) ? palette[idx] : null;
-            var img = SpriteButton(screen, "Build_" + idx, sprite, x0, y0, x1, y1, () => { if (data != null) placement.SelectStall(data); });
-            if (data != null) _buyButtons.Add((img, data));
-            AddTooltip(img.gameObject, () => data != null ? $"{data.displayName}  -  ${data.cost}" : "Puesto");
+            bool locked = idx >= 1; // solo el puesto simple habilitado; doble/triple = proximamente
+            var img = SpriteButton(screen, "Build_" + idx, sprite, x0, y0, x1, y1,
+                () => { if (!locked && data != null) placement.SelectStall(data); });
+            if (locked)
+            {
+                _lockedButtons.Add(img); // siempre deshabilitado
+                AddTooltip(img.gameObject, () => "Proximamente");
+            }
+            else
+            {
+                if (data != null) _buyButtons.Add((img, data));
+                AddTooltip(img.gameObject, () => data != null ? $"{data.displayName}  -  ${data.cost}" : "Puesto");
+            }
         }
 
         // como Place, pero si hay una disposicion guardada para 'name' usa esa
@@ -371,7 +382,7 @@ namespace Salada.UI
             var icon = iconGo.GetComponent<Image>();
             icon.sprite = vacio; icon.color = Color.white; icon.preserveAspect = true; icon.raycastTarget = false;
 
-            AddTooltip(cont.gameObject, () => $"{label}: {Mathf.RoundToInt(getter())}");
+            AddTooltip(cont.gameObject, () => label); // solo el nombre (sin el valor)
             _meterList.Add(new Meter { fill = fill, icon = icon, getter = getter, isWarning = isWarning });
         }
 
@@ -424,13 +435,11 @@ namespace Salada.UI
             AddTooltip(img.gameObject, () => _zoneView != null && _zoneView.Active ? "Cerrar mapa de zonas" : "Ver zonas (facciones)");
         }
 
-        // boton de opciones del juego (derecha, fila de abajo) - sin sprite propio por ahora
+        // boton de opciones/configuraciones (derecha, fila de abajo)
         void BuildOptionsButton(RectTransform screen)
         {
-            var img = SpriteButton(screen, "Opciones", null, ColR0, Row4_0, ColR1, Row4_1,
+            var img = SpriteButton(screen, "Opciones", skin != null ? skin.options : null, ColR0, Row4_0, ColR1, Row4_1,
                 () => { if (_options != null) _options.Show(); });
-            var fb = img.GetComponent<ButtonFeedback>();
-            if (fb != null) fb.SetBase(new Color(0.80f, 0.82f, 0.88f)); // caja neutra (todavia sin icono)
             AddTooltip(img.gameObject, () => "Opciones");
         }
 
@@ -658,6 +667,7 @@ namespace Salada.UI
                 if (_demolishImg != null) Dim(_demolishImg, building);
                 foreach (var (img, data) in _buyButtons)
                     Dim(img, building && waves.CanAfford(data.cost));
+                foreach (var img in _lockedButtons) Dim(img, false); // puesto doble/triple = proximamente
             }
             ApplySpotlight();
         }

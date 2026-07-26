@@ -40,8 +40,9 @@ MonoBehaviour:
     algo al respecto."
   mustCompete: "Primero, meteles presion: pon\xE9 un puesto en la MISMA zona que
     ellos. Dale, colocalo."
-  explainDispute: 'Ahora abri el menu de ZONAS (el boton nuevo del celu), toca la
-    zona en disputa y elegi ATACAR para romperles el puesto. Es un tira y afloja:
-    macha para ganar. Ojo que atacar te baja un poco la reputacion y te sube la hostilidad.'
+  explainDispute: Ahora abri el menu de ZONAS, toca la zona en disputa y elegi ATACAR
+    para romperles el puesto. Es un tira y afloja, clickea rapido para ganar. Ojo
+    que atacar te baja un poco la reputacion y te sube la hostilidad. para salir
+    del modo zonas basta con un click derecho (esto tambien funciona al construir)
   finish: "\xA1Y listo! Con eso ya sabes todo lo que necesitas para arrancar. El
     resto lo vas a ir agarrando solo. \xA1Mucha suerte!"

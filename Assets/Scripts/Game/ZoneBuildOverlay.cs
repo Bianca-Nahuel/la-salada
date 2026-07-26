@@ -17,10 +17,10 @@ namespace Salada.Game
         [SerializeField] private TerritoryManager territory;
         [SerializeField] private int sortingOrder = 2;
 
-        [SerializeField] private Color ownColor = new Color(0.30f, 0.80f, 1f, 0.38f);      // celeste: mis zonas
-        [SerializeField] private Color adjFreeColor = new Color(0.30f, 1f, 0.35f, 0.38f);  // verde: adyacente libre
-        [SerializeField] private Color adjDisputeColor = new Color(1f, 0.90f, 0.20f, 0.42f); // amarillo: adyacente en disputa
-        [SerializeField] private Color blockedColor = new Color(1f, 0.30f, 0.30f, 0.33f);  // rojo: no se puede
+        [SerializeField] private Color ownColor = new Color(0.30f, 0.80f, 1f, 0.55f);      // celeste: mis zonas
+        [SerializeField] private Color adjFreeColor = new Color(0.30f, 1f, 0.35f, 0.55f);  // verde: adyacente libre
+        [SerializeField] private Color adjDisputeColor = new Color(1f, 0.90f, 0.20f, 0.60f); // amarillo: adyacente en disputa
+        [SerializeField] private Color blockedColor = new Color(1f, 0.30f, 0.30f, 0.50f);  // rojo: no se puede
 
         private readonly List<(Vector2Int cell, SpriteRenderer sr)> _cells = new List<(Vector2Int, SpriteRenderer)>();
         private GameObject _root;

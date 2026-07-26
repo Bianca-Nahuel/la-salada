@@ -17,6 +17,7 @@ namespace Salada.UI
 
         [Header("Otros botones")]
         public Sprite zones;    // boton de ver zonas
+        public Sprite options;  // boton de opciones/configuraciones
 
         [Header("Medidores (vacio = icono, color = relleno)")]
         public Sprite hostilVacio, hostilColor;         // hostilidad (rojo)

@@ -25,8 +25,8 @@ namespace Salada.Placement
         [SerializeField] private DisputePopup popup;
         [SerializeField] private int sortingOrder = 3;
 
-        [SerializeField, Range(0f, 1f)] private float baseAlpha = 0.40f;   // opacidad normal de cada zona
-        [SerializeField, Range(0f, 1f)] private float hoverAlpha = 0.72f;  // opacidad de la zona bajo el mouse
+        [SerializeField, Range(0f, 1f)] private float baseAlpha = 0.58f;   // opacidad normal de cada zona
+        [SerializeField, Range(0f, 1f)] private float hoverAlpha = 0.90f;  // opacidad de la zona bajo el mouse
 
         private readonly List<(Vector2Int cell, SpriteRenderer sr)> _cells = new List<(Vector2Int, SpriteRenderer)>();
         private GameObject _root;
