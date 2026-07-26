@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using Salada.Placement;
 using Salada.Combat;
 using Salada.Game;
@@ -40,7 +41,13 @@ namespace Salada.UI
         private Font _font;
 
         private Text _moneyText;
-        private Text _clockText;
+        private Text _dayTimeText;  // dia + hora (derecha del header, misma fila que la plata)
+        private Text _clockText;    // gastos + % del mapa que dominas (linea de abajo, mas chica)
+        private TerritoryManager _territory;   // para el % de dominancia
+        private TerritoryController _zoneView; // modo "ver zonas"
+        private Canvas _canvas;                // para saber la zona del celu en pantalla (auto-retraer)
+        private RectTransform _moneyPill;      // plata siempre visible (cuando el celu esta escondido)
+        private Text _moneyPillText;
 
         // boton de oleada
         private Image _waveImg;
@@ -88,6 +95,9 @@ namespace Salada.UI
             if (waves == null) waves = FindAnyObjectByType<WaveManager>();
             _meters = FindAnyObjectByType<BusinessMeters>();
             _effects = FindAnyObjectByType<GameEffects>();
+            _territory = FindAnyObjectByType<TerritoryManager>();
+            _zoneView = FindAnyObjectByType<TerritoryController>();
+            _canvas = GetComponentInParent<Canvas>();
             _font = skin != null && skin.font != null ? skin.font : UIFont.Get();
             BuildPhone();
         }
@@ -119,6 +129,8 @@ namespace Salada.UI
             BuildHeader(screen);
             BuildGrid(screen);
             BuildWaveButton(screen);
+            BuildZoneButton(screen);
+            BuildMoneyPill(); // plata siempre visible aunque se oculte el celu
             if (Application.isEditor) BuildDebugButton();
             BuildTooltip(); // ultimo: se dibuja encima de todo
 
@@ -135,14 +147,20 @@ namespace Salada.UI
             }
         }
 
-        // ---- header: plata + dia/reloj/gastos ----
+        // ---- header: (fila 1) plata a la izquierda + dia/hora a la derecha ; (fila 2) gastos + % tuyo ----
 
         void BuildHeader(RectTransform screen)
         {
             _moneyText = MakeText(screen, "$0", 26, new Color(1f, 0.86f, 0.35f), FontStyle.Bold, TextAnchor.MiddleLeft);
-            Place(_moneyText.rectTransform, 0.02f, 0.885f, 0.98f, 1.0f);
-            _clockText = MakeText(screen, "", 12, new Color(0.85f, 0.9f, 0.96f), FontStyle.Normal, TextAnchor.MiddleLeft);
-            Place(_clockText.rectTransform, 0.02f, 0.82f, 0.98f, 0.885f);
+            Place(_moneyText.rectTransform, 0.02f, 0.885f, 0.52f, 1.0f);
+            _moneyText.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+            _dayTimeText = MakeText(screen, "", 15, new Color(0.88f, 0.92f, 0.98f), FontStyle.Bold, TextAnchor.MiddleRight);
+            Place(_dayTimeText.rectTransform, 0.50f, 0.885f, 0.98f, 1.0f);
+            _dayTimeText.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+            _clockText = MakeText(screen, "", 12, new Color(0.82f, 0.86f, 0.93f), FontStyle.Normal, TextAnchor.MiddleLeft);
+            Place(_clockText.rectTransform, 0.02f, 0.815f, 0.98f, 0.882f);
             _clockText.horizontalOverflow = HorizontalWrapMode.Overflow;
         }
 
@@ -241,6 +259,33 @@ namespace Salada.UI
             if (waves.IsBuilding)
                 return waves.DayComplete ? "Avanzar al dia siguiente" : "Empezar oleada";
             return $"Velocidad x{Speeds[_speedIdx]:0} (click para cambiar)";
+        }
+
+        // pill de plata: hijo del marco pero se mantiene fijo en la esquina de pantalla (contrarresta
+        // el deslizamiento) y solo se muestra cuando el celu esta escondido, asi la plata nunca se va.
+        void BuildMoneyPill()
+        {
+            var go = new GameObject("MoneyPill", typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(transform, false);
+            _moneyPill = go.GetComponent<RectTransform>();
+            _moneyPill.anchorMin = _moneyPill.anchorMax = new Vector2(0f, 0f);
+            _moneyPill.pivot = new Vector2(0f, 0f);
+            _moneyPill.sizeDelta = new Vector2(150f, 46f);
+            var bg = go.GetComponent<Image>();
+            bg.color = new Color(0.06f, 0.07f, 0.09f, 0.9f);
+            bg.raycastTarget = false;
+            _moneyPillText = MakeText(go.transform, "$0", 24, new Color(1f, 0.86f, 0.35f), FontStyle.Bold, TextAnchor.MiddleCenter);
+            Stretch(_moneyPillText.rectTransform);
+            go.SetActive(false);
+        }
+
+        // boton "sin logo" (por ahora) a la izquierda del de oleada: abre el modo ver-zonas
+        void BuildZoneButton(RectTransform screen)
+        {
+            var img = SpriteButton(CellAt(screen, 0.050f, 0.008f, 0.300f, 0.173f), null,
+                () => { if (_zoneView != null) _zoneView.ToggleZoneView(); });
+            img.color = new Color(0.75f, 0.78f, 0.85f, 0.92f); // caja neutra (todavia sin icono)
+            AddTooltip(img.gameObject, () => _zoneView != null && _zoneView.Active ? "Cerrar mapa de zonas" : "Ver zonas (facciones)");
         }
 
         void OnAction()
@@ -354,8 +399,14 @@ namespace Salada.UI
         {
             if (!Application.isPlaying) return; // en edicion se ve estatico (para acomodar iconos)
 
+            // en modo ver-zonas / construir / demoler, si el mouse se acerca al celu se retrae
+            // solo para no estorbar (sin cambiar el estado manual _shown); al salir, vuelve.
+            bool interfereMode = (_zoneView != null && _zoneView.Active)
+                || (placement != null && placement.CurrentMode != PlacementController.Mode.Idle);
+            bool shown = interfereMode && MouseOverPhoneArea() ? false : _shown;
+
             // escondido: baja dejando ver un pedacito (peek) arriba; desplegado: pegado abajo
-            float targetY = _shown ? 0f : -(width * FrameAspect - peek);
+            float targetY = shown ? 0f : -(width * FrameAspect - peek);
             var p = _rt.anchoredPosition;
             p.y = Mathf.Lerp(p.y, targetY, Time.unscaledDeltaTime * slideSpeed);
             _rt.anchoredPosition = p;
@@ -367,7 +418,20 @@ namespace Salada.UI
             _prevBuilding = building;
 
             _moneyText.text = "$" + waves.Money;
-            _clockText.text = $"Dia {waves.Day} · {waves.ClockText} · Gastos ${waves.DailyFee()}";
+            _dayTimeText.text = $"Dia {waves.Day} · {waves.ClockText}";
+            int dom = _territory != null ? _territory.PlayerDominancePercent() : 0;
+            _clockText.text = $"Gastos ${waves.DailyFee()} · Tuyo {dom}% de La Salada";
+
+            // pill de plata: visible solo con el celu escondido, clavado en la esquina de pantalla
+            if (_moneyPill != null)
+            {
+                _moneyPill.gameObject.SetActive(!shown);
+                if (!shown)
+                {
+                    _moneyPill.anchoredPosition = new Vector2(14f, 14f - _rt.anchoredPosition.y);
+                    _moneyPillText.text = "$" + waves.Money;
+                }
+            }
 
             // sprite del boton de oleada segun estado
             if (_waveImg != null && skin != null)
@@ -384,6 +448,18 @@ namespace Salada.UI
             if (_demolishImg != null) Dim(_demolishImg, building);
             foreach (var (img, data) in _buyButtons)
                 Dim(img, building && waves.CanAfford(data.cost));
+        }
+
+        // el mouse esta sobre (o pegado a) la esquina donde vive el celu, usando su huella "desplegada"
+        // asi no oscila cuando se retrae. Coords de mouse = pantalla; el celu ancla en (0,0) abajo-izq.
+        bool MouseOverPhoneArea()
+        {
+            if (Mouse.current == null) return false;
+            var mp = Mouse.current.position.ReadValue();
+            float scale = _canvas != null ? _canvas.scaleFactor : 1f;
+            float w = width * scale + 40f;                 // + margen
+            float h = width * FrameAspect * scale + 40f;
+            return mp.x <= w && mp.y <= h;
         }
 
         static void Dim(Image img, bool enabled)

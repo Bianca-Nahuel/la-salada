@@ -65,10 +65,8 @@ namespace Salada.Game
         [Tooltip("Ventaja de poder a partir de la cual arrasa TODOS los puestos del perdedor en la zona.")]
         [SerializeField] private int powerGapForWipe = 4;
 
-        [Header("Disputas rival-vs-rival (Etapa 2)")]
-        [Tooltip("Probabilidad por dia de que dos rivales peleen en una zona que se disputan entre ellos.")]
-        [SerializeField] private float rivalClashChance = 0.5f;
-        [Tooltip("Cuantos puestos pierde el perdedor por pelea (de a poco: guerra de desgaste).")]
+        [Header("Disputas rival-vs-rival")]
+        [Tooltip("Cuantos puestos pierde el perdedor por pelea rival-vs-rival (de a poco: guerra de desgaste).")]
         [SerializeField] private int rivalClashStallLoss = 1;
 
         [SerializeField] private Color warningColor = new Color(1f, 0.5f, 0.2f);
@@ -255,10 +253,24 @@ namespace Salada.Game
             foreach (var zone in Model.Zones)
             {
                 var st = StatusOf(zone);
-                bool playerDisputed = IsDisputant(st, Owner.Player);
-                if (playerDisputed) { if (!_patience.ContainsKey(zone)) _patience[zone] = patienceMax; }
+                // toda zona disputada (con vos o entre rivales) lleva paciencia; asi se puede mostrar
+                if (st.state == ZoneState.Disputed) { if (!_patience.ContainsKey(zone)) _patience[zone] = patienceMax; }
                 else { _patience.Remove(zone); _warned.Remove(zone); }
             }
+        }
+
+        /// <summary>% del mapa que domina el jugador (zonas Owned tuyas). Las disputadas NO cuentan.</summary>
+        public int PlayerDominancePercent()
+        {
+            if (Model == null) return 0;
+            int total = 0, mine = 0;
+            foreach (var z in Model.Zones)
+            {
+                total++;
+                var st = StatusOf(z);
+                if (st.state == ZoneState.Owned && st.ownerA == Owner.Player) mine++;
+            }
+            return total == 0 ? 0 : Mathf.RoundToInt(100f * mine / total);
         }
 
         void OnDayPassed()
@@ -272,11 +284,21 @@ namespace Salada.Game
             {
                 var st = StatusOf(zone);
                 if (st.state != ZoneState.Disputed) continue;
-                Owner rival = Rival(st);
-                int gap = PowerOf(zone, rival) - PowerOf(zone, Owner.Player);
-                float gapMult = Mathf.Clamp(1f + powerGapK * gap / Mathf.Max(1f, powerScale), 0.3f, 2.5f);
-                // balance diario: regenera si estas tranquilo (poca hostilidad), baja rapido en conflicto
-                float decay = dailyDecayBase * hostFactor * gapMult;
+                float decay;
+                if (IsDisputant(st, Owner.Player))
+                {
+                    // disputa tuya: tu hostilidad y la diferencia de poder contra el rival aceleran
+                    int gap = PowerOf(zone, Rival(st)) - PowerOf(zone, Owner.Player);
+                    float gapMult = Mathf.Clamp(1f + powerGapK * gap / Mathf.Max(1f, powerScale), 0.3f, 2.5f);
+                    decay = dailyDecayBase * hostFactor * gapMult;
+                }
+                else
+                {
+                    // rival-vs-rival: vos no estas en el medio; decae segun la diferencia entre ellos
+                    int gap = Mathf.Abs(PowerOf(zone, st.ownerA) - PowerOf(zone, st.ownerB));
+                    float gapMult = Mathf.Clamp(1f + powerGapK * gap / Mathf.Max(1f, powerScale), 0.5f, 2.5f);
+                    decay = dailyDecayBase * gapMult;
+                }
                 AddPatience(zone, patienceRegenPerDay - decay);
             }
             ResolveRivalDisputes();
@@ -292,8 +314,9 @@ namespace Salada.Game
                 var st = StatusOf(zone);
                 if (st.state != ZoneState.Disputed) continue;
                 if (st.ownerA == Owner.Player || st.ownerB == Owner.Player) continue; // solo rival-vs-rival
-                if (NextFloat() > rivalClashChance) continue;
-                ClashRivals(zone, st);
+                // pelean cuando se les agota la paciencia (igual que las tuyas, pero sin aviso)
+                if (_patience.TryGetValue(zone, out float p) && p <= attackThreshold)
+                    ClashRivals(zone, st); // ApplyDisputeOutcome resetea la paciencia si sigue disputada
             }
         }
 

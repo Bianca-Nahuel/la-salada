@@ -2,13 +2,14 @@ using UnityEngine;
 using UnityEngine.UI;
 using Salada.Game;
 using Salada.Combat;
+using Salada.Placement;
 
 namespace Salada.UI
 {
     /// <summary>
-    /// Modal que aparece al clickear una zona disputada: Atacar (inicia el minijuego, baja
-    /// reputacion y sube hostilidad), Negociar (paga segun la paciencia y rellena la tregua) o
-    /// Cancelar. No muestra el numero de paciencia, solo una frase cualitativa de tension.
+    /// Modal de info de zona (se abre desde el modo "ver zonas" del celular): muestra dueño y
+    /// poder de cada faccion, y si la zona esta disputada tambien su medidor de paciencia. Si es
+    /// una disputa TUYA agrega Atacar (inicia el minijuego) y Negociar (paga y hace tregua).
     /// </summary>
     public class DisputePopup : MonoBehaviour
     {
@@ -51,28 +52,78 @@ namespace Salada.UI
         {
             if (_root == null) { _font = UIFont.Get(); Build(); }
             Clear();
-            string rival = territory.RivalNameOf(zone);
-            AddText($"Zona {zone} en disputa con los {rival}", 22, new Color(1f, 0.85f, 0.5f), FontStyle.Bold, 32);
-            AddText($"Los {rival} se ven {territory.TensionLine(zone)}.", 16, new Color(0.85f, 0.88f, 0.94f), FontStyle.Italic, 26);
 
-            AddButton("Atacar  (−reputacion, +hostilidad)", new Color(0.7f, 0.3f, 0.25f), () =>
+            var st = territory.StatusOf(zone);
+            AddText($"Zona {zone}", 22, new Color(1f, 0.85f, 0.5f), FontStyle.Bold, 30);
+
+            // dueño(s) y poder
+            if (st.state == ZoneState.Neutral)
+                AddText("Sin dueño (libre)", 16, new Color(0.8f, 0.85f, 0.9f), FontStyle.Italic, 26);
+            else if (st.state == ZoneState.Owned)
+                AddText($"De los {st.ownerA.Display()}  ·  Poder {territory.PowerOf(zone, st.ownerA)}",
+                    16, ColorOf(st.ownerA), FontStyle.Bold, 26);
+            else // disputada
             {
-                _root.SetActive(false);
-                territory.PlayerAttack(zone);
-            });
+                AddText($"En disputa: {st.ownerA.Display()} (poder {territory.PowerOf(zone, st.ownerA)})  vs  " +
+                        $"{st.ownerB.Display()} (poder {territory.PowerOf(zone, st.ownerB)})",
+                    15, new Color(0.9f, 0.9f, 0.95f), FontStyle.Bold, 30);
+                AddPatienceBar(territory.PatienceNormalized(zone));
+            }
 
-            int cost = territory.NegotiationCost(zone);
-            bool canAfford = waves != null && waves.CanAfford(cost);
-            var negBtn = AddButton($"Negociar (−${cost})", new Color(0.25f, 0.55f, 0.6f), () =>
+            bool playerDisputed = st.state == ZoneState.Disputed && (st.ownerA == Owner.Player || st.ownerB == Owner.Player);
+            if (playerDisputed)
             {
-                _root.SetActive(false);
-                territory.PlayerNegotiate(zone);
-            });
-            negBtn.interactable = canAfford;
+                AddButton("Atacar  (−reputacion, +hostilidad)", new Color(0.7f, 0.3f, 0.25f), () =>
+                {
+                    _root.SetActive(false);
+                    territory.PlayerAttack(zone);
+                });
 
-            AddButton("Cancelar", new Color(0.3f, 0.32f, 0.38f), () => _root.SetActive(false));
+                int cost = territory.NegotiationCost(zone);
+                bool canAfford = waves != null && waves.CanAfford(cost);
+                var negBtn = AddButton($"Negociar (−${cost})", new Color(0.25f, 0.55f, 0.6f), () =>
+                {
+                    _root.SetActive(false);
+                    territory.PlayerNegotiate(zone);
+                });
+                negBtn.interactable = canAfford;
+            }
+
+            AddButton("Cerrar", new Color(0.3f, 0.32f, 0.38f), () => _root.SetActive(false));
             _root.SetActive(true);
         }
+
+        Color ColorOf(Owner o)
+        {
+            switch (o)
+            {
+                case Owner.Player: return new Color(0.35f, 0.9f, 1f);
+                case Owner.Enemy: return new Color(1f, 0.45f, 0.4f);   // Picantes (rojo)
+                case Owner.Neutral: return new Color(1f, 0.9f, 0.35f); // Crowned (amarillo)
+                default: return Color.white;
+            }
+        }
+
+        // medidor de paciencia (0..1): barra que va de rojo (poca) a verde (mucha)
+        void AddPatienceBar(float normalized)
+        {
+            normalized = Mathf.Clamp01(normalized);
+            AddText($"Paciencia: {Mathf.RoundToInt(normalized * 100f)}%", 13, new Color(0.8f, 0.83f, 0.9f), FontStyle.Normal, 20);
+
+            var barGo = new GameObject("PatienceBar", typeof(RectTransform), typeof(Image));
+            barGo.transform.SetParent(_content, false);
+            barGo.AddComponent<LayoutElement>().minHeight = 18;
+            barGo.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.4f); // fondo
+
+            var fillGo = new GameObject("Fill", typeof(RectTransform), typeof(Image));
+            fillGo.transform.SetParent(barGo.transform, false);
+            var frt = fillGo.GetComponent<RectTransform>();
+            frt.anchorMin = new Vector2(0f, 0f); frt.anchorMax = new Vector2(normalized, 1f);
+            frt.offsetMin = frt.offsetMax = Vector2.zero;
+            fillGo.GetComponent<Image>().color = Color.Lerp(new Color(0.85f, 0.25f, 0.2f), new Color(0.3f, 0.8f, 0.35f), normalized);
+        }
+
+        public void Hide() { if (_root != null) _root.SetActive(false); }
 
         static void Stretch(RectTransform rt)
         {

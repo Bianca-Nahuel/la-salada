@@ -17,6 +17,8 @@ namespace Salada.Game
         [SerializeField] private float zoomStep = 0.6f;    // por muesca de rueda
         [SerializeField] private float minZoom = 2.5f;
         [SerializeField] private float startZoom = 5f;
+        [Tooltip("Cuanto se puede ver mas alla del borde del mapa (parte no jugable), en unidades de mundo.")]
+        [SerializeField] private float viewMargin = 2f;
 
         private Camera _cam;
         private float _maxZoom = 10f;
@@ -31,8 +33,9 @@ namespace Salada.Game
             if (grid == null || grid.Model == null) return;
 
             var m = grid.Model;
-            float mapW = m.Width * m.CellSize, mapH = m.Height * m.CellSize;
-            // zoom maximo = ver todo el mapa (el que sea mas restrictivo entre alto y ancho)
+            // sumamos el margen: se puede ver un poco mas alla del borde del mapa
+            float mapW = m.Width * m.CellSize + 2f * viewMargin, mapH = m.Height * m.CellSize + 2f * viewMargin;
+            // zoom maximo = ver todo el mapa + margen (el que sea mas restrictivo entre alto y ancho)
             _maxZoom = Mathf.Max(mapH * 0.5f, mapW / (2f * Mathf.Max(0.1f, _cam.aspect)));
             _cam.orthographicSize = Mathf.Clamp(startZoom, minZoom, _maxZoom);
 
@@ -96,9 +99,9 @@ namespace Salada.Game
         void MoveTo(Vector2 target)
         {
             var m = grid.Model;
-            float minX = m.Origin.x, minY = m.Origin.y;
-            float maxX = m.Origin.x + m.Width * m.CellSize;
-            float maxY = m.Origin.y + m.Height * m.CellSize;
+            float minX = m.Origin.x - viewMargin, minY = m.Origin.y - viewMargin;
+            float maxX = m.Origin.x + m.Width * m.CellSize + viewMargin;
+            float maxY = m.Origin.y + m.Height * m.CellSize + viewMargin;
             float halfH = _cam.orthographicSize;
             float halfW = halfH * _cam.aspect;
 
