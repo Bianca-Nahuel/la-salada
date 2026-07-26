@@ -77,6 +77,7 @@ namespace Salada.Game
         private EventManager _events;
         private DisputeMinigame _minigame;
         private WarningPopup _warningPopup;
+        private FactionAI _ai;
 
         private readonly Dictionary<char, float> _patience = new Dictionary<char, float>();
         private readonly HashSet<char> _warned = new HashSet<char>();  // zonas que ya mostraron el aviso de tension
@@ -108,6 +109,8 @@ namespace Salada.Game
             _events = FindAnyObjectByType<EventManager>();
             _minigame = FindAnyObjectByType<DisputeMinigame>(FindObjectsInactive.Include);
             _warningPopup = FindAnyObjectByType<WarningPopup>(FindObjectsInactive.Include);
+            _ai = FindAnyObjectByType<FactionAI>();
+            if (_ai != null) _rng = _ai.SeedFor(2); // semilla por partida (stream separado del WaveManager)
             if (_waves != null) _waves.DayPassed += OnDayPassed;
         }
 
@@ -259,19 +262,30 @@ namespace Salada.Game
             }
         }
 
-        /// <summary>% del mapa que domina el jugador (zonas Owned tuyas). Las disputadas NO cuentan.</summary>
-        public int PlayerDominancePercent()
+        /// <summary>
+        /// % del mapa que domina una faccion. Una zona Owned suya cuenta 1 entera; una zona disputada
+        /// donde esta cuenta una fraccion = su poder / poder total en esa zona (ponderacion de poder).
+        /// </summary>
+        public int DominancePercent(Owner f)
         {
             if (Model == null) return 0;
-            int total = 0, mine = 0;
+            int total = 0; float share = 0f;
             foreach (var z in Model.Zones)
             {
                 total++;
                 var st = StatusOf(z);
-                if (st.state == ZoneState.Owned && st.ownerA == Owner.Player) mine++;
+                if (st.state == ZoneState.Owned && st.ownerA == f)
+                    share += 1f; // zona suya entera
+                else if (st.state == ZoneState.Disputed && (st.ownerA == f || st.ownerB == f))
+                {
+                    float totalPow = PowerOf(z, st.ownerA) + PowerOf(z, st.ownerB);
+                    if (totalPow > 0f) share += PowerOf(z, f) / totalPow; // fraccion por poder
+                }
             }
-            return total == 0 ? 0 : Mathf.RoundToInt(100f * mine / total);
+            return total == 0 ? 0 : Mathf.RoundToInt(100f * share / total);
         }
+
+        public int PlayerDominancePercent() => DominancePercent(Owner.Player);
 
         void OnDayPassed()
         {
@@ -294,10 +308,9 @@ namespace Salada.Game
                 }
                 else
                 {
-                    // rival-vs-rival: vos no estas en el medio; decae segun la diferencia entre ellos
-                    int gap = Mathf.Abs(PowerOf(zone, st.ownerA) - PowerOf(zone, st.ownerB));
-                    float gapMult = Mathf.Clamp(1f + powerGapK * gap / Mathf.Max(1f, powerScale), 0.5f, 2.5f);
-                    decay = dailyDecayBase * gapMult;
+                    // rival-vs-rival: pelean rapido. Decaimiento fijo para llegar a 0 en <= maxDias.
+                    int maxDays = _ai != null ? Mathf.Max(1, _ai.rivalDisputeMaxDays) : 2;
+                    decay = patienceRegenPerDay + patienceMax / maxDays; // neto = -patienceMax/maxDias por dia
                 }
                 AddPatience(zone, patienceRegenPerDay - decay);
             }

@@ -22,6 +22,8 @@ namespace Salada.Combat
         private CombatManager _combat;
         private BusinessMeters _meters;
         private GameEffects _effects;
+        private FactionAI _ai;
+        private float _almostSoldWeight; // >0 solo en rivales: priorizan al cliente casi-vendido
         private float _steal, _projSpeed, _projSize;
         private float _nextAttack;
 
@@ -32,6 +34,9 @@ namespace Salada.Combat
             _combat = FindAnyObjectByType<CombatManager>();
             _meters = FindAnyObjectByType<BusinessMeters>();
             _effects = FindAnyObjectByType<GameEffects>();
+            _ai = FindAnyObjectByType<FactionAI>();
+            // los puestos del jugador siguen pegando al mas cercano; solo la IA rival enfoca casi-vendidos
+            _almostSoldWeight = (_ai != null && stall.Owner != Owner.Player) ? _ai.Of(stall.Owner).almostSoldWeight : 0f;
 
             float mult = _combat != null ? _combat.DamageMult(stall.Owner) : 1f;
             damage = data.attackDamage * mult;
@@ -53,7 +58,7 @@ namespace Salada.Combat
             float rangeSqr = range * range;
 
             Client target = null;
-            float bestSqr = rangeSqr;
+            float bestScore = float.NegativeInfinity;
             foreach (var c in Client.Active)
             {
                 if (!c.IsTargetable) continue;
@@ -61,7 +66,10 @@ namespace Salada.Combat
                 float dSqr = to.sqrMagnitude;
                 if (dSqr > rangeSqr) continue;
                 if (Vector2.Dot(to, facing) < 0f) continue; // atras -> no alcanza
-                if (dSqr < bestSqr) { bestSqr = dSqr; target = c; }
+                // por defecto (jugador): mas cercano. Rivales: mayor progreso de venta, desempata cercania.
+                float score = -dSqr / rangeSqr; // 0 (encima) .. -1 (borde)
+                if (_almostSoldWeight > 0f) score += _almostSoldWeight * c.SaleProgress;
+                if (score > bestScore) { bestScore = score; target = c; }
             }
 
             if (target != null)

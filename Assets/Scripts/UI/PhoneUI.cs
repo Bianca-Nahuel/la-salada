@@ -419,8 +419,14 @@ namespace Salada.UI
 
             _moneyText.text = "$" + waves.Money;
             _dayTimeText.text = $"Dia {waves.Day} · {waves.ClockText}";
-            int dom = _territory != null ? _territory.PlayerDominancePercent() : 0;
-            _clockText.text = $"Gastos ${waves.DailyFee()} · Tuyo {dom}% de La Salada";
+            if (_territory != null)
+            {
+                int vos = _territory.DominancePercent(Owner.Player);
+                int pic = _territory.DominancePercent(Owner.Enemy);
+                int cro = _territory.DominancePercent(Owner.Neutral);
+                _clockText.text = $"Gastos ${waves.DailyFee()}  ·  Vos {vos}%  Pic {pic}%  Cro {cro}%";
+            }
+            else _clockText.text = $"Gastos ${waves.DailyFee()}";
 
             // pill de plata: visible solo con el celu escondido, clavado en la esquina de pantalla
             if (_moneyPill != null)

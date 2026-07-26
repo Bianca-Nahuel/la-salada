@@ -51,7 +51,7 @@ namespace Salada.Combat
 
         [Header("Dias / cuota")]
         [Tooltip("Cada cuantas oleadas pasa un dia.")]
-        public int wavesPerDay = 3;
+        public int wavesPerDay = 2;
         [Tooltip("Hora en que arranca el dia (primera oleada).")]
         public int dayStartHour = 9;
         [Tooltip("Cuantas horas del juego dura cada oleada (9->13->17).")]
@@ -80,9 +80,9 @@ namespace Salada.Combat
         ExpansionTuning TuningFor(Owner o) => o == Owner.Enemy ? enemyExpansion : neutralExpansion;
 
         [Header("Balanzas (cuanto suben/bajan las estadisticas)")]
-        [Tooltip("Reputacion que sube por CADA venta que hagas (no hace falta ganarsela a un rival).")]
+        [Tooltip("Reputacion que sube por venta GANADA A UN RIVAL (disputada). Las ventas libres no suman.")]
         public float reputationPerSale = 1f;
-        [Tooltip("Hostilidad que sube cuando le ganas una venta a un rival (le sacas un cliente).")]
+        [Tooltip("Hostilidad que sube por venta disputada, SOLO si el rival esta en tu zona o una adyacente.")]
         public float hostilityPerSale = 0.3f;
         [Tooltip("Reputacion que BAJA por cada cliente que un puesto tuyo ataco pero se fue sin comprar.")]
         public float reputationPerEscape = 0.5f;
@@ -140,6 +140,15 @@ namespace Salada.Combat
         private BusinessMeters _meters;
         private GameEffects _effects;
         private Salada.Game.TerritoryManager _territory;
+        private Salada.Game.FactionAI _ai;
+
+        // stats para la IA de expansion (decaen por dia): fuerza de ventas por faccion, y golpes
+        // perdidos / ventas por (faccion, zona) — para "reforzar donde pego pero vende poco".
+        private readonly Dictionary<Owner, float> _recentSales = new Dictionary<Owner, float>();
+        private readonly Dictionary<(Owner, char), float> _lostHits = new Dictionary<(Owner, char), float>();
+        private readonly Dictionary<(Owner, char), float> _zoneSales = new Dictionary<(Owner, char), float>();
+        // clientes DISPUTADOS (ambos le pegaron) que 'thief' le robo a 'victim' -> victim quiere invadir a thief
+        private readonly Dictionary<(Owner victim, Owner thief), float> _stolenBy = new Dictionary<(Owner, Owner), float>();
 
         void Start()
         {
@@ -148,6 +157,8 @@ namespace Salada.Combat
             _meters = FindAnyObjectByType<BusinessMeters>();
             _effects = FindAnyObjectByType<GameEffects>();
             _territory = FindAnyObjectByType<Salada.Game.TerritoryManager>();
+            _ai = FindAnyObjectByType<Salada.Game.FactionAI>();
+            if (_ai != null) _rng = _ai.SeedFor(1); // semilla por partida (o fija para pruebas)
             _openings = grid.Model.EntranceCells.Count > 0
                 ? new List<Vector2Int>(grid.Model.EntranceCells)
                 : grid.Model.GetBorderAisleOpenings();
@@ -216,6 +227,7 @@ namespace Salada.Combat
             Day++;
             WavesToday = 0;
             _waveElapsed = 0f;
+            DecayAIStats();       // la IA "olvida" un poco las ventas/golpes viejos
             DayPassed?.Invoke();  // evento del nuevo dia
         }
 
@@ -357,11 +369,7 @@ namespace Salada.Combat
                 Money += reward;
                 SalesWon++;
                 FloatingText.Spawn(c.transform.position, "+$" + reward, grid.playerColor);
-                if (_meters != null)
-                {
-                    _meters.Add(MeterType.Reputation, reputationPerSale);  // ganar sube reputacion
-                    _meters.Add(MeterType.Hostility, hostilityPerSale);   // le sacamos ventas al rival -> nos odia mas
-                }
+                if (_meters != null) ApplyPlayerSaleMeters(c);
                 RegisterSteals(c);
             }
             else
@@ -370,6 +378,7 @@ namespace Salada.Combat
                 _pendingExpansion.TryGetValue(winner, out int n); // expansion diferida al fin de la oleada
                 _pendingExpansion[winner] = n + 1;
             }
+            RecordSaleStats(c, winner); // fuerza de ventas + atribucion por zona + golpes perdidos
         }
 
         void OnEscaped(Client c)
@@ -379,6 +388,78 @@ namespace Salada.Combat
             // los clientes que nunca enganchaste (pasaron de largo o fueron del rival) no bajan tu reputacion.
             if (_meters != null && c.ConvinceBy(Owner.Player) > 0f)
                 _meters.Add(MeterType.Reputation, -reputationPerEscape); // mal servicio
+            // golpe perdido para toda faccion que lo toco pero no lo cerro (nadie compro)
+            foreach (var f in AllOwners)
+                if (c.ConvinceBy(f) > 0f) AddZoneStat(_lostHits, f, ZoneOfTopStall(c, f), 1f);
+        }
+
+        static readonly Owner[] AllOwners = { Owner.Player, Owner.Neutral, Owner.Enemy };
+
+        // registra: +1 fuerza de ventas al ganador y +1 venta en su zona; +1 golpe perdido a cada
+        // faccion que habia golpeado al cliente pero no gano (pego y no vendio).
+        void RecordSaleStats(Client c, Owner winner)
+        {
+            _recentSales.TryGetValue(winner, out float s); _recentSales[winner] = s + 1f;
+            AddZoneStat(_zoneSales, winner, ZoneOfTopStall(c, winner), 1f);
+            foreach (var f in AllOwners)
+                if (f != winner && c.ConvinceBy(f) > 0f)
+                {
+                    AddZoneStat(_lostHits, f, ZoneOfTopStall(c, f), 1f);
+                    // el cliente era disputado (f y el ganador le pegaron) -> se lo robaron a f
+                    _stolenBy.TryGetValue((f, winner), out float sb); _stolenBy[(f, winner)] = sb + 1f;
+                }
+        }
+
+        char ZoneOfTopStall(Client c, Owner f)
+        {
+            var st = c.TopStallOf(f);
+            return st != null ? grid.Model.ZoneOf(st.OriginCell) : '.';
+        }
+
+        static void AddZoneStat(Dictionary<(Owner, char), float> d, Owner o, char z, float v)
+        {
+            if (z == '.') return;
+            d.TryGetValue((o, z), out float cur); d[(o, z)] = cur + v;
+        }
+
+        static void ScaleStats<TK>(Dictionary<TK, float> d, float k)
+        {
+            var keys = new List<TK>(d.Keys);
+            foreach (var key in keys) d[key] *= k;
+        }
+
+        void DecayAIStats()
+        {
+            float k = _ai != null ? _ai.statDayDecay : 0.5f;
+            ScaleStats(_recentSales, k); ScaleStats(_lostHits, k); ScaleStats(_zoneSales, k); ScaleStats(_stolenBy, k);
+        }
+
+        /// <summary>
+        /// Reputacion y hostilidad de una venta del jugador:
+        /// - Reputacion: solo si le ganaste el cliente a otra faccion (venta disputada).
+        /// - Hostilidad: ademas, solo si ese rival tiene presencia en la misma zona o una adyacente.
+        /// Las ventas "libres" (sin rival peleandolas) no mueven ninguna de las dos.
+        /// </summary>
+        void ApplyPlayerSaleMeters(Client c)
+        {
+            char z = c.LastSaleStall != null ? grid.Model.ZoneOf(c.LastSaleStall.OriginCell) : '.';
+            bool wonFromRival = false, angeredNearby = false;
+            foreach (var rival in new[] { Owner.Neutral, Owner.Enemy })
+            {
+                if (c.ConvinceBy(rival) <= 0f) continue;   // ese rival no peleaba este cliente
+                wonFromRival = true;
+                if (z != '.' && RivalInZoneOrAdjacent(z, rival)) angeredNearby = true;
+            }
+            if (wonFromRival) _meters.Add(MeterType.Reputation, reputationPerSale); // le ganaste a un rival
+            if (angeredNearby) _meters.Add(MeterType.Hostility, hostilityPerSale);  // rival al lado -> se calienta
+        }
+
+        /// <summary>True si 'rival' tiene puestos en la zona 'zone' o en una adyacente (distancia &lt;= 1).</summary>
+        bool RivalInZoneOrAdjacent(char zone, Owner rival)
+        {
+            foreach (var oz in grid.Model.Zones)
+                if (grid.Model.StallCountInZone(oz, rival) > 0 && grid.Model.ZoneDistance(zone, oz) <= 1) return true;
+            return false;
         }
 
         /// <summary>
@@ -403,17 +484,19 @@ namespace Salada.Combat
             TryExpand(Owner.Enemy);
         }
 
+        int ExpandBaseCost(Owner o) => _ai != null ? _ai.Of(o).baseCost : TuningFor(o).baseCost;
+        int ExpandGrowth(Owner o) => _ai != null ? _ai.Of(o).growth : TuningFor(o).growth;
+
         void TryExpand(Owner owner)
         {
             if (expansionStallData == null) return;
-            var t = TuningFor(owner);
             _pendingExpansion.TryGetValue(owner, out int n);
             _expansionsDone.TryGetValue(owner, out int done);
-            // cada expansion cuesta mas ventas que la anterior (ritmo por faccion)
+            // cada expansion cuesta mas ventas que la anterior (ritmo por faccion, desde el perfil)
             int safety = 0;
             while (safety++ < 200)
             {
-                int need = Mathf.Max(1, t.baseCost + t.growth * done); // nunca 0 -> evita loop infinito
+                int need = Mathf.Max(1, ExpandBaseCost(owner) + ExpandGrowth(owner) * done); // nunca 0 -> evita loop infinito
                 if (n < need) break;
                 if (!ExpandFaction(owner)) break; // sin celda valida -> no gastar las ventas
                 n -= need;
@@ -437,10 +520,9 @@ namespace Salada.Combat
 
         public string DebugExpansionInfo(Owner o)
         {
-            var t = TuningFor(o);
             _pendingExpansion.TryGetValue(o, out int n);
             _expansionsDone.TryGetValue(o, out int d);
-            return $"{o}: pending={n} expansiones={d} proxCosto={t.baseCost + t.growth * d}";
+            return $"{o}: pending={n} expansiones={d} proxCosto={ExpandBaseCost(o) + ExpandGrowth(o) * d}";
         }
 
         /// <summary>Agrega 'n' ventas pendientes a la faccion y corre la expansion (para testeo).</summary>
@@ -460,6 +542,8 @@ namespace Salada.Combat
             return grid.SpawnStall(cell.Value, Vector2Int.one, owner, facing, expansionStallData) != null;
         }
 
+        // ---- Expansion inteligente: puntaje por celda candidata (pesos por perfil de faccion) ----
+
         Vector2Int? FindExpansionCell(Owner owner)
         {
             var m = grid.Model;
@@ -469,62 +553,100 @@ namespace Salada.Combat
                 {
                     var cell = new Vector2Int(x, y);
                     if (m.GetCell(cell) != CellType.Grass || m.GetOccupant(cell) != null) continue;
-                    // los rivales tambien respetan las zonas: solo su zona o adyacente (y no meterse en disputa ajena)
+                    // respetan zonas: solo su zona o adyacente (y no meterse en disputa ajena)
                     if (_territory != null && !_territory.CanBuild(owner, cell, Vector2Int.one, out _)) continue;
                     candidates.Add(cell);
                 }
             if (candidates.Count == 0) return null;
+            if (_ai == null || _territory == null) return candidates[NextInt(candidates.Count)]; // fallback simple
 
-            // Direccion segun TU hostilidad: es la probabilidad de que se ACERQUEN a vos.
-            // Ej: hostilidad 20 -> 20% de acercarse, 80% de alejarse. (Vale para rojo y amarillo.)
-            bool playerHasStalls = false;
-            foreach (var s in m.Stalls) if (s.Owner == Owner.Player) { playerHasStalls = true; break; }
-            if (playerHasStalls)
+            var p = _ai.Of(owner);
+            float hostility01 = _meters != null ? _meters.HostilityChance : 0.5f; // hostilidad/100
+            float maxSales = 0f;
+            foreach (var kv in _recentSales) if (kv.Value > maxSales) maxSales = kv.Value;
+            float maxStolen = 0f;
+            foreach (var g in AllOwners) if (g != owner) maxStolen = Mathf.Max(maxStolen, Stolen(owner, g));
+            var playerCells = StallCellsOf(Owner.Player);
+            var ownCells = StallCellsOf(owner);
+
+            Vector2Int best = candidates[0];
+            float bestScore = float.NegativeInfinity;
+            foreach (var cell in candidates)
             {
-                float hostChance = _meters != null ? _meters.HostilityChance : 0.5f;
-                bool approach = NextFloat() < hostChance;
-                var pick = approach ? NearestCandidateTo(candidates, Owner.Player)
-                                    : FarthestCandidateFrom(candidates, Owner.Player);
-                if (pick.HasValue) return pick.Value;
-            }
-
-            // Sin puestos del jugador todavia: se agrupan cerca de lo propio.
-            var nearOwn = new List<Vector2Int>();
-            foreach (var cand in candidates)
-                foreach (var s in m.Stalls)
-                    if (s.Owner == owner && Manhattan(cand, s.OriginCell) <= 2) { nearOwn.Add(cand); break; }
-            if (nearOwn.Count > 0) return nearOwn[NextInt(nearOwn.Count)];
-            return candidates[NextInt(candidates.Count)];
-        }
-
-        /// <summary>Candidato mas LEJANO a cualquier puesto de 'target' (para alejarse); null si no hay.</summary>
-        Vector2Int? FarthestCandidateFrom(List<Vector2Int> candidates, Owner target)
-        {
-            Vector2Int? best = null;
-            int bestD = -1;
-            foreach (var cand in candidates)
-            {
-                int nearest = int.MaxValue;
-                foreach (var s in grid.Model.Stalls)
-                    if (s.Owner == target) nearest = Mathf.Min(nearest, Manhattan(cand, s.OriginCell));
-                if (nearest != int.MaxValue && nearest > bestD) { bestD = nearest; best = cand; }
+                char z = m.ZoneOf(cell);
+                float score =
+                      p.wReinforce  * ReinforceNeed(owner, z)                       // pego pero vendo poco aca
+                    + p.wUnoccupied * (ZoneEmpty(z) ? 1f : 0f)                      // zona libre
+                    + p.wInvade     * InvadeScore(owner, z, maxSales, maxStolen)    // invadir a un competidor amenazante
+                    + p.wAntiPlayer * Closeness(cell, playerCells) * hostility01    // contra el jugador si sos hostil
+                    + p.wCohesion   * Closeness(cell, ownCells)                     // agruparse con lo propio
+                    + p.randomJitter * NextFloat();
+                if (score > bestScore) { bestScore = score; best = cell; }
             }
             return best;
         }
 
-        /// <summary>Candidato mas cercano a cualquier puesto de 'target'; null si no hay puestos de esa faccion.</summary>
-        Vector2Int? NearestCandidateTo(List<Vector2Int> candidates, Owner target)
+        float Stolen(Owner victim, Owner thief) { _stolenBy.TryGetValue((victim, thief), out float v); return v; }
+
+        List<Vector2Int> StallCellsOf(Owner o)
         {
-            Vector2Int? best = null;
-            int bestD = int.MaxValue;
-            foreach (var cand in candidates)
+            var list = new List<Vector2Int>();
+            foreach (var s in grid.Model.Stalls) if (s.Owner == o) list.Add(s.OriginCell);
+            return list;
+        }
+
+        static float Closeness(Vector2Int cell, List<Vector2Int> cells)
+        {
+            if (cells.Count == 0) return 0f;
+            int best = int.MaxValue;
+            foreach (var c in cells) best = Mathf.Min(best, Manhattan(cell, c));
+            return 1f / (1f + best); // 1 (encima) .. ->0 (lejos)
+        }
+
+        // "reforzar": alto donde la faccion ya esta pero pega mucho y vende poco (pierde clientes).
+        float ReinforceNeed(Owner owner, char z)
+        {
+            if (z == '.' || grid.Model.StallCountInZone(z, owner) == 0) return 0f;
+            _lostHits.TryGetValue((owner, z), out float lh);
+            if (lh <= 0f) return 0f;
+            _zoneSales.TryGetValue((owner, z), out float sv);
+            return lh / (sv + lh + 1f);
+        }
+
+        bool ZoneEmpty(char z)
+        {
+            if (z == '.') return false;
+            foreach (var o in AllOwners) if (grid.Model.StallCountInZone(z, o) > 0) return false;
+            return true;
+        }
+
+        // "invadir": si la zona esta pegada al territorio de un competidor AMENAZANTE. Un competidor
+        // amenaza si (cualquiera de las tres): te roba clientes disputados, domina mucho la salada, o
+        // capta muchos clientes. Devuelve 0..1 (la señal mas fuerte de la mejor amenaza cercana).
+        float InvadeScore(Owner owner, char z, float maxSales, float maxStolen)
+        {
+            if (z == '.') return 0f;
+            float best = 0f;
+            foreach (var g in AllOwners)
             {
-                int nearest = int.MaxValue;
-                foreach (var s in grid.Model.Stalls)
-                    if (s.Owner == target) nearest = Mathf.Min(nearest, Manhattan(cand, s.OriginCell));
-                if (nearest < bestD) { bestD = nearest; best = cand; }
+                if (g == owner || !NearOccupiedZoneOf(z, g)) continue;
+                float stolenNorm = maxStolen > 0f ? Stolen(owner, g) / maxStolen : 0f;      // te roba disputados
+                float domNorm = _territory != null ? _territory.DominancePercent(g) / 100f : 0f; // % de la salada
+                _recentSales.TryGetValue(g, out float gs);
+                float salesNorm = maxSales > 0f ? gs / maxSales : 0f;                        // capta clientes
+                best = Mathf.Max(best, Mathf.Max(stolenNorm, Mathf.Max(domNorm, salesNorm)));
             }
             return best;
+        }
+
+        bool NearOccupiedZoneOf(char z, Owner g)
+        {
+            foreach (var oz in grid.Model.Zones)
+            {
+                if (grid.Model.StallCountInZone(oz, g) == 0) continue;
+                if (oz == z || grid.Model.ZoneDistance(z, oz) <= 1) return true;
+            }
+            return false;
         }
 
         static int Manhattan(Vector2Int a, Vector2Int b) => Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y);

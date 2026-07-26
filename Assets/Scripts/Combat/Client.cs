@@ -51,8 +51,14 @@ namespace Salada.Combat
         public bool IsTargetable => !_sold;
         public float TotalConvince => _total;
 
+        /// <summary>Progreso de venta [0..1] (que tan cerca esta de venderse). Para el targeting rival.</summary>
+        public float SaleProgress => _threshold > 0f ? Mathf.Clamp01(_total / _threshold) : 0f;
+
         /// <summary>Convencimiento acumulado por una faccion (para detectar robos de venta).</summary>
         public float ConvinceBy(Owner o) => _byFaction.TryGetValue(o, out var v) ? v : 0f;
+
+        /// <summary>Puesto de 'faction' que mas convencio a este cliente (para atribuir zona de golpes/ventas).</summary>
+        public PlacedStall TopStallOf(Owner faction) => BestStallOf(faction);
 
         /// <summary>Puesto ganador de la venta (seteado al vender); null si aun no vendio.</summary>
         public PlacedStall LastSaleStall { get; private set; }

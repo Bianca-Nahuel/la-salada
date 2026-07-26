@@ -156,6 +156,9 @@ MonoBehaviour:
   waves: {fileID: 0}
   territory: {fileID: 0}
   popup: {fileID: 0}
+  sortingOrder: 3
+  baseAlpha: 0.4
+  hoverAlpha: 0.72
 --- !u!114 &57626249
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -183,9 +186,8 @@ MonoBehaviour:
   negotiateBaseCost: 40
   attackReputationCost: 8
   attackHostilityGain: 8
-  playerStallLoss: 1
-  maxStallLoss: 3
-  rivalClashChance: 0.5
+  powerGapForDouble: 1
+  powerGapForWipe: 4
   rivalClashStallLoss: 1
   warningColor: {r: 1, g: 0.5, b: 0.2, a: 1}
 --- !u!4 &57626250
@@ -426,6 +428,7 @@ MonoBehaviour:
   zoomStep: 0.6
   minZoom: 2.5
   startZoom: 5
+  viewMargin: 2
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -801,7 +804,7 @@ MonoBehaviour:
   startingMoney: 150
   saleReward: 10
   refundFraction: 0.5
-  wavesPerDay: 3
+  wavesPerDay: 2
   dayStartHour: 9
   hoursPerWave: 4
   salaryPerStall: 5
@@ -1148,6 +1151,7 @@ MonoBehaviour:
   pushPerClick: 0.06
   minRequiredCPS: 0.5
   enemyPushMult: 3
+  countdownSeconds: 3
   barPixels: 440
 --- !u!1 &1770848649
 GameObject:
@@ -1256,6 +1260,74 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!1 &2042194107
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2042194109}
+  - component: {fileID: 2042194108}
+  m_Layer: 0
+  m_Name: FactionAI
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2042194108
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2042194107}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93560d23655945d4aa53ed314cf5b2b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.FactionAI
+  picantes:
+    baseCost: 3
+    growth: 2
+    almostSoldWeight: 1
+    wReinforce: 0.8
+    wUnoccupied: 0.4
+    wInvade: 1
+    wAntiPlayer: 0.6
+    wCohesion: 0.3
+    randomJitter: 0.15
+  crowned:
+    baseCost: 3
+    growth: 3
+    almostSoldWeight: 1
+    wReinforce: 1.2
+    wUnoccupied: 0.4
+    wInvade: 0.9
+    wAntiPlayer: 0.2
+    wCohesion: 0.5
+    randomJitter: 0.15
+  useRandomSeed: 1
+  fixedSeed: 12345
+  statDayDecay: 0.5
+  rivalDisputeMaxDays: 2
+--- !u!4 &2042194109
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2042194107}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2114993999
 GameObject:
   m_ObjectHideFlags: 0
@@ -1477,3 +1549,4 @@ SceneRoots:
   - {fileID: 1770848653}
   - {fileID: 1234581333}
   - {fileID: 57626250}
+  - {fileID: 2042194109}
