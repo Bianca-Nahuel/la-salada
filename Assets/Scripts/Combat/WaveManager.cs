@@ -20,15 +20,26 @@ namespace Salada.Combat
 
         [Header("Oleadas")]
         [Tooltip("Clientes de la primera oleada (numero fijo, no aleatorio).")]
-        public int baseClients = 12;
+        public int baseClients = 18;
         [Tooltip("Clientes extra por cada oleada que pasa.")]
         public int perWaveIncrement = 3;
         [Tooltip("Duracion real de la oleada a x1 (las 4 horas). Los clientes se reparten en este tiempo.")]
         public float waveDuration = 45f;
 
+        [Header("Ayuda de arranque (dias iniciales)")]
+        [Tooltip("Hasta que dia los clientes tienden a entrar/salir cerca de tus puestos (empujoncito inicial).")]
+        public int helpDays = 1;
+        [Tooltip("Probabilidad (0-1) de que un cliente entre O salga cerca tuyo en esos dias. Bajo = mas sutil.")]
+        [Range(0f, 1f)] public float helpBiasChance = 0.18f;
+
         [Header("Clientes")]
-        public float clientSpeed = 1.8f;
-        public float convinceThreshold = 100f;
+        public float clientSpeed = 2.0f;
+        [Tooltip("Golpes para convencer el DIA 1 (con el puesto basico 1x1, a reputacion 50).")]
+        public float hitsToConvinceDay1 = 3f;
+        [Tooltip("Golpes que aumenta por dia. 0.5 = +1 golpe cada 2 dias.")]
+        public float hitsIncreasePerDay = 0.5f;
+        [Tooltip("Dano de un golpe de referencia a reputacion 50 (el puesto basico 1x1 pega 25).")]
+        public float referenceHitDamage = 25f;
         public float clientSize = 0.5f;
         public Color clientColor = new Color(0.15f, 0.35f, 0.95f);
         [Tooltip("Sprites de los clientes (normal + version por faccion al comprar). Si esta vacio, usa el cuadrado.")]
@@ -284,9 +295,20 @@ namespace Salada.Combat
 
         // ---- Clientes ----
 
+        /// <summary>Golpes para convencer en el dia actual (calibrado al puesto basico a reputacion 50).</summary>
+        public float HitsToConvince() => hitsToConvinceDay1 + hitsIncreasePerDay * (Day - 1);
+
+        /// <summary>Umbral de convencimiento del dia = golpes del dia x dano de un golpe de referencia.</summary>
+        public float EffectiveThreshold() => HitsToConvince() * referenceHitDamage;
+
         void SpawnClient()
         {
-            var start = _openings[NextInt(_openings.Count)];
+            // dias 1-2: pequeña ayuda -> el cliente ENTRA (o SALE) cerca de tus puestos. Sutil (por chance).
+            bool helpEntrance = HelpBiasRoll();
+            var start = helpEntrance ? OpeningNearPlayer() : _openings[NextInt(_openings.Count)];
+            bool helpExit = !helpEntrance && HelpBiasRoll(); // no siempre las dos, para que no se note
+            Vector2Int? preferredExit = helpExit ? OpeningNearPlayer() : (Vector2Int?)null;
+
             List<Vector2Int> cells;
             int rushUntil = 0;
             bool rusher = _openings.Count >= 2 && NextFloat() < centerRusherChance;
@@ -295,10 +317,10 @@ namespace Salada.Combat
             {
                 // va rapido al centro y despues recorre lento hasta una salida (no solo campear salidas)
                 var center = grid.Model.NearestAisleCell(MapCenterWorld());
-                var exit = PickDifferentOpening(start);
+                var exit = (preferredExit.HasValue && preferredExit.Value != start) ? preferredExit.Value : PickDifferentOpening(start);
                 var p1 = grid.Model.FindAislePath(start, center);
                 var p2 = grid.Model.FindAislePath(center, exit);
-                if (p1 == null || p2 == null || p1.Count < 1) { rusher = false; cells = DirectPath(start); }
+                if (p1 == null || p2 == null || p1.Count < 1) { rusher = false; cells = DirectPath(start, preferredExit); }
                 else
                 {
                     cells = new List<Vector2Int>(p1);
@@ -306,7 +328,7 @@ namespace Salada.Combat
                     rushUntil = p1.Count; // waypoints hasta el centro = tramo rapido
                 }
             }
-            else cells = DirectPath(start);
+            else cells = DirectPath(start, preferredExit);
 
             if (cells == null || cells.Count < 2) return;
 
@@ -319,7 +341,7 @@ namespace Salada.Combat
             if (clientSkins != null && clientSkins.skins.Count > 0)
                 client.SetSkin(clientSkins.skins[NextInt(clientSkins.skins.Count)]); // cliente random (antes de Init)
             client.SetExits(_openings); // sale por cualquier salida
-            client.Init(grid, worldPath, clientSpeed, convinceThreshold, buyPauseDuration, clientSize, clientColor,
+            client.Init(grid, worldPath, clientSpeed, EffectiveThreshold(), buyPauseDuration, clientSize, clientColor,
                 convinceDecayPerSec, OnConverted, OnEscaped);
             if (rusher) client.SetRush(rushUntil, clientSpeed * rushSpeedMult, clientSpeed * slowSpeedMult);
         }
@@ -328,8 +350,31 @@ namespace Salada.Combat
         public void DebugSpawnClient() => SpawnClient();
 
         /// <summary>Recorrido directo boca->boca, corto o largo (segun longPathChance).</summary>
-        List<Vector2Int> DirectPath(Vector2Int start)
+        // roll para la ayuda de arranque: solo dias <= helpDays, con puestos propios, y por chance
+        bool HelpBiasRoll() => Day <= helpDays && PlayerStallCount() > 0 && NextFloat() < helpBiasChance;
+
+        /// <summary>La boca mas cercana a algun puesto del jugador (para el empujoncito de los primeros dias).</summary>
+        Vector2Int OpeningNearPlayer()
         {
+            var m = grid.Model;
+            Vector2Int best = _openings[NextInt(_openings.Count)]; int bestD = int.MaxValue;
+            foreach (var o in _openings)
+            {
+                int nearest = int.MaxValue;
+                foreach (var s in m.Stalls) if (s.Owner == Owner.Player) nearest = Mathf.Min(nearest, Manhattan(o, s.OriginCell));
+                if (nearest < bestD) { bestD = nearest; best = o; }
+            }
+            return best;
+        }
+
+        List<Vector2Int> DirectPath(Vector2Int start, Vector2Int? preferred = null)
+        {
+            // si hay una salida preferida (ayuda de arranque), intentar ir directo a ella
+            if (preferred.HasValue && preferred.Value != start)
+            {
+                var pp = grid.Model.FindAislePath(start, preferred.Value);
+                if (pp != null && pp.Count >= 2) return pp;
+            }
             bool wantLong = NextFloat() < longPathChance;
             for (int attempt = 0; attempt < 12; attempt++)
             {

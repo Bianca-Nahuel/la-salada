@@ -837,11 +837,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Combat.WaveManager
   grid: {fileID: 2114994001}
-  baseClients: 12
+  baseClients: 18
   perWaveIncrement: 3
   waveDuration: 45
-  clientSpeed: 2.4
-  convinceThreshold: 100
+  helpDays: 1
+  helpBiasChance: 0.18
+  clientSpeed: 2
+  hitsToConvinceDay1: 3
+  hitsIncreasePerDay: 0.5
+  referenceHitDamage: 25
   clientSize: 0.5
   clientColor: {r: 0.15, g: 0.35, b: 0.95, a: 1}
   clientSkins: {fileID: 11400000, guid: 6bb0a51542b30f54a802957793fa6dfd, type: 2}
