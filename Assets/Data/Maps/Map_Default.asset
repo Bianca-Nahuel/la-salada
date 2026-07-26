@@ -15,19 +15,19 @@ MonoBehaviour:
   width: 26
   height: 13
   rows:
-  - ARARAAEAAAEAAAAAEAAEAAEAEA
-  - E22222222222222Y5YA5AA5A5A
-  - AAAAAA3AAA0AAA5A5AA5AA5A5A
+  - ARARAREAAAEAAAAAEAAEAAEAEA
+  - E22222222222222A5AA5AA5A5A
+  - AAAAAR3AAA0AAA5A5AA5AA5A5A
   - E22222311111115A5AA5AA5A5A
   - AAAAAA3AAA0AAA55555555555A
   - AAAAAA311111115A5AA5AA5A5A
-  - E333330AAA0AAA5Y5AA5AA5A5A
+  - E333330AAA0AAA5A5AA5AA5A5A
   - AAAAAA0AAA0AAA5A5AA5AA5A5A
-  - AAAAAA111111115Y5AA5AA5A5A
+  - AAAAAA111111115A5AA5AA5A5A
   - E222222AAA0AAA5A5AA5AA5A5A
-  - AAARAA2AAA0AAA5A5AA5AA5A5A
+  - AAAAAA2YAY0AAA5A5AA5AA5A5A
   - E111111111011151222222222A
-  - ARAAAAEAAAEAAAAAEAAEAAEAAA
+  - AAAAAAEYAYEAAAAAEAAEAAEAAA
   zoneRows:
   - aaaaaahhhhhhhhii.in.nn.o.o
   - aaaaaahhhhhhhhiiiinnnnoooo
@@ -37,10 +37,10 @@ MonoBehaviour:
   - bbbbbbggggggggjjkkkkmmmppp
   - ccccccggggggggjjkkkkmmmppp
   - ccccccffffffffjjkkkkmmmppp
-  - ccccccffffffffjjkkklllpppp
-  - ddddddffffffffjjkkklllpppp
-  - ddddddeeeeeeeejjkkklllpppp
-  - ddddddeeeeeeeejjlllllllqqq
-  - ddddddeeeeeeeejj.ll.lllqqq
+  - ccccccffffffffjjkkkkllpppp
+  - ddddddffffffffjjkkkkllpppp
+  - ddddddeeeeesssjjkkkkllpppp
+  - ddddddeeeeesssrrrrrklllqqq
+  - ddddddeeeeesssrrrrrllllqqq
   playerHomeZone: 113
   prePlaced: []

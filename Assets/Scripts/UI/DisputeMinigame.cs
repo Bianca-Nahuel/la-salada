@@ -23,6 +23,10 @@ namespace Salada.UI
         [SerializeField] private float pushPerClick = 0.06f;
         [Tooltip("Piso del umbral de clicks/seg (con mucha ventaja igual pedis al menos esto).")]
         [SerializeField] private float minRequiredCPS = 0.5f;
+        [Tooltip("Multiplicador de la velocidad con la que empuja el rival. Mas alto = el enemigo tira mas fuerte/rapido.")]
+        [SerializeField] private float enemyPushMult = 2f;
+        [Tooltip("Segundos de cuenta atras (3,2,1) antes de que arranque la pelea, para que te prepares.")]
+        [SerializeField] private float countdownSeconds = 3f;
         [SerializeField] private float barPixels = 440f;
 
         private GameObject _root;
@@ -33,7 +37,10 @@ namespace Salada.UI
         private Font _font;
 
         private bool _showing;
-        private bool _started;        // el tira-y-afloja arranca despues del mensaje
+        private bool _started;        // el tira-y-afloja arranca despues de la cuenta atras
+        private float _countdown;     // segundos que faltan de la cuenta atras (3,2,1)
+        private float _yaTimer;       // cuanto queda mostrando "¡YA!" al arrancar
+        private Text _countText;      // numero grande de la cuenta atras
         private float _t;
         private float _enemyPull;      // tiron del rival por seg = requiredCPS * pushPerClick (empate a requiredCPS clicks/seg)
         private Owner _rival;
@@ -99,6 +106,11 @@ namespace Salada.UI
             MakeButton(panel.transform, "¡EMPUJA!", new Color(0.2f, 0.55f, 0.6f), new Vector2(0, -60), new Vector2(220, 60), Push);
             MakeButton(panel.transform, "Retirarse", new Color(0.4f, 0.3f, 0.3f), new Vector2(0, -128), new Vector2(220, 40), Retreat);
 
+            // numero grande de la cuenta atras (sobre la barra), oculto hasta que arranca
+            _countText = MakeText(panel.transform, "", 64, new Color(1f, 0.9f, 0.4f), FontStyle.Bold);
+            SetRect(_countText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0, 30), new Vector2(220, 120));
+            _countText.gameObject.SetActive(false);
+
             // ---- overlay de mensaje ANTES de la pelea ----
             _intro = new GameObject("Intro", typeof(RectTransform), typeof(Image));
             _intro.transform.SetParent(_root.transform, false); // ultimo hijo -> se dibuja arriba
@@ -130,17 +142,19 @@ namespace Salada.UI
             int gap = _rivalPower - _playerPower; // >0 = estas en desventaja
             // umbral de clicks/seg para empatar; a ese ritmo el dial no se mueve
             float requiredCPS = Mathf.Max(minRequiredCPS, clicksToWinEqual + clicksPerPowerDiff * gap);
-            _enemyPull = requiredCPS * pushPerClick;
+            _enemyPull = requiredCPS * pushPerClick * enemyPushMult;
 
             _t = 0.5f;
-            _title.text = $"Disputa por la Zona {zone}  (vos {_playerPower} vs {_rival} {_rivalPower})";
+            _title.text = $"Disputa por la Zona {zone}  (vos {_playerPower} vs {_rival.Display()} {_rivalPower})";
             UpdateMarker();
 
             // mensaje antes de arrancar
-            string quien = playerIsAttacker ? $"Vas a atacar la Zona {zone}." : $"¡Los rivales de la Zona {zone} te atacan!";
-            _introText.text = $"{quien}\n(vos {_playerPower} vs {_rival} {_rivalPower})\n\nTOCA o ESPACIO para EMPEZAR.\nDespues macha para llevar el marcador a tu lado (derecha).";
+            string quien = playerIsAttacker ? $"Vas a atacar la Zona {zone}." : $"¡Los {_rival.Display()} de la Zona {zone} te atacan!";
+            _introText.text = $"{quien}\n(vos {_playerPower} vs {_rival.Display()} {_rivalPower})\n\nTOCA o ESPACIO para EMPEZAR.\nDespues macha para llevar el marcador a tu lado (derecha).";
             _intro.SetActive(true);
             _started = false;
+            _countdown = 0f; _yaTimer = 0f;
+            if (_countText != null) _countText.gameObject.SetActive(false);
 
             _prevTimeScale = Time.timeScale;
             Time.timeScale = 0f;
@@ -148,7 +162,18 @@ namespace Salada.UI
             _root.SetActive(true);
         }
 
-        void BeginFight() { _started = true; if (_intro != null) _intro.SetActive(false); }
+        // el mensaje de intro termina -> arranca la cuenta atras (todavia no la pelea)
+        void BeginFight()
+        {
+            if (_intro != null) _intro.SetActive(false);
+            _started = false;
+            _countdown = countdownSeconds;
+            if (_countText != null)
+            {
+                _countText.gameObject.SetActive(true);
+                _countText.text = Mathf.CeilToInt(countdownSeconds).ToString();
+            }
+        }
 
         void Update()
         {
@@ -158,11 +183,34 @@ namespace Salada.UI
                 (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame) ||
                 (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame);
 
-            // durante el mensaje: arrancar con click/espacio directo (no depende del EventSystem con timeScale=0)
-            if (!_started)
+            // fase 1: mensaje de intro -> arranca la cuenta atras con click/espacio
+            // (no depende del EventSystem, que no responde con timeScale=0)
+            if (_intro != null && _intro.activeSelf)
             {
                 if (clickOrSpace) BeginFight();
                 return;
+            }
+
+            // fase 2: cuenta atras (3,2,1) para prepararse; los clicks NO empujan y el rival NO tira
+            if (!_started)
+            {
+                _countdown -= Time.unscaledDeltaTime;
+                if (_countdown > 0f)
+                {
+                    if (_countText != null) _countText.text = Mathf.CeilToInt(_countdown).ToString();
+                    return;
+                }
+                _started = true;               // ¡arranca la pelea!
+                _yaTimer = 0.5f;
+                if (_countText != null) _countText.text = "¡YA!";
+                return;
+            }
+
+            // el cartel "¡YA!" queda un instante y se oculta (la pelea ya esta activa)
+            if (_yaTimer > 0f)
+            {
+                _yaTimer -= Time.unscaledDeltaTime;
+                if (_yaTimer <= 0f && _countText != null) _countText.gameObject.SetActive(false);
             }
 
             // retirarse con click derecho o Escape (el boton del EventSystem no responde con timeScale=0)

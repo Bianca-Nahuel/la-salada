@@ -183,6 +183,7 @@ MonoBehaviour:
   negotiateBaseCost: 40
   attackReputationCost: 8
   attackHostilityGain: 8
+  playerStallLoss: 1
   maxStallLoss: 3
   rivalClashChance: 0.5
   rivalClashStallLoss: 1
@@ -813,7 +814,7 @@ MonoBehaviour:
     baseCost: 3
     growth: 2
   expansionStallData: {fileID: 11400000, guid: 199c3582a5225db4a9533694c1a6578f, type: 2}
-  reputationPerSale: 0.5
+  reputationPerSale: 1
   hostilityPerSale: 0.3
   reputationPerEscape: 0.5
 --- !u!4 &1234581333
@@ -1146,6 +1147,7 @@ MonoBehaviour:
   clicksPerPowerDiff: 0.5
   pushPerClick: 0.06
   minRequiredCPS: 0.5
+  enemyPushMult: 3
   barPixels: 440
 --- !u!1 &1770848649
 GameObject:

@@ -146,6 +146,7 @@ namespace Salada.Placement
         {
             var removed = grid.Model.Remove(cell);
             if (removed == null) return;
+            Salada.Combat.DustBurst.Spawn(grid.Model.CellToWorldCenter(removed.OriginCell)); // polvo al demoler
             if (removed.View != null) Destroy(removed.View);
             _waves?.RefundStall(removed.Cost);
             CurrentMode = Mode.Idle; // una demolicion -> vuelve al control normal

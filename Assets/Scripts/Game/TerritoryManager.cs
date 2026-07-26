@@ -58,7 +58,12 @@ namespace Salada.Game
         [SerializeField] private int negotiateBaseCost = 40;
         [SerializeField] private float attackReputationCost = 8f;
         [SerializeField] private float attackHostilityGain = 8f;
-        [SerializeField] private int maxStallLoss = 3;
+
+        [Header("Puestos que pierde el perdedor segun la ventaja de poder del ganador en la zona")]
+        [Tooltip("Ventaja de poder (ganador - perdedor) a partir de la cual saca 2 puestos. Menos que esto = 1.")]
+        [SerializeField] private int powerGapForDouble = 1;
+        [Tooltip("Ventaja de poder a partir de la cual arrasa TODOS los puestos del perdedor en la zona.")]
+        [SerializeField] private int powerGapForWipe = 4;
 
         [Header("Disputas rival-vs-rival (Etapa 2)")]
         [Tooltip("Probabilidad por dia de que dos rivales peleen en una zona que se disputan entre ellos.")]
@@ -76,8 +81,7 @@ namespace Salada.Game
         private WarningPopup _warningPopup;
 
         private readonly Dictionary<char, float> _patience = new Dictionary<char, float>();
-        private readonly HashSet<char> _warned = new HashSet<char>();
-        private readonly List<char> _pendingAttacks = new List<char>();
+        private readonly HashSet<char> _warned = new HashSet<char>();  // zonas que ya mostraron el aviso de tension
         private bool _draining;
         private int _rng = 24680;
 
@@ -253,7 +257,7 @@ namespace Salada.Game
                 var st = StatusOf(zone);
                 bool playerDisputed = IsDisputant(st, Owner.Player);
                 if (playerDisputed) { if (!_patience.ContainsKey(zone)) _patience[zone] = patienceMax; }
-                else { _patience.Remove(zone); _warned.Remove(zone); _pendingAttacks.Remove(zone); }
+                else { _patience.Remove(zone); _warned.Remove(zone); }
             }
         }
 
@@ -275,8 +279,8 @@ namespace Salada.Game
                 float decay = dailyDecayBase * hostFactor * gapMult;
                 AddPatience(zone, patienceRegenPerDay - decay);
             }
-            EvaluateThresholds();
             ResolveRivalDisputes();
+            DispatchDailyNotice(); // muestra UNA sola cosa: pelea (prioridad) o aviso de tension
         }
 
         // ---- Etapa 2: disputas automaticas entre rivales (rojo vs amarillo) ----
@@ -333,8 +337,7 @@ namespace Salada.Game
             if (stealer != Owner.Player || !_patience.ContainsKey(zone)) return;
             var st = StatusOf(zone);
             if (st.state != ZoneState.Disputed || (st.ownerA != victim && st.ownerB != victim)) return;
-            AddPatience(zone, -stealDecay);
-            EvaluateThresholds();
+            AddPatience(zone, -stealDecay); // el aviso/pelea se despacha recien al terminar la oleada
         }
 
         /// <summary>Ajusta la paciencia de una zona disputada (eventos/negociacion). Solo si ya hay entrada.</summary>
@@ -347,43 +350,76 @@ namespace Salada.Game
         public float PatienceOf(char zone) => _patience.TryGetValue(zone, out var v) ? v : -1f;
         public float PatienceNormalized(char zone) => _patience.TryGetValue(zone, out var v) ? Mathf.Clamp01(v / patienceMax) : 1f;
 
-        void EvaluateThresholds()
+        // ---- Cola de avisos/peleas: 1 sola cosa por oleada, con prioridad ----
+        // Regla: se muestra como mucho UN item por dia. Las peleas tienen prioridad sobre los
+        // avisos, PERO una pelea nunca aparece antes que el aviso de "se esta poniendo tensa la
+        // zona" (una zona solo pelea si ya mostro su aviso en un dia anterior).
+
+        void DispatchDailyNotice()
+        {
+            if (_draining || !isActiveAndEnabled) return;
+            StartCoroutine(ShowOneDailyNotice());
+        }
+
+        IEnumerator ShowOneDailyNotice()
+        {
+            _draining = true;
+            // esperar a que no haya un evento diario ni un minijuego abierto
+            while ((_events != null && _events.IsEventPending) || (_minigame != null && _minigame.IsShowing))
+                yield return null;
+
+            // 1) PRIORIDAD: una pelea lista (paciencia agotada) en una zona que YA fue avisada
+            char fightZone = FirstFightReadyZone();
+            if (fightZone != '.')
+            {
+                var st = StatusOf(fightZone);
+                StartDispute(fightZone, Rival(st), Owner.Player); // el rival ataca; vos defendes
+                _draining = false;
+                yield break;
+            }
+
+            // 2) si no hay pelea: un unico aviso de tension nuevo (recien ahi la zona puede pelear)
+            char warnZone = FirstUnwarnedTenseZone();
+            if (warnZone != '.') { _warned.Add(warnZone); EmitWarning(warnZone); }
+            _draining = false;
+        }
+
+        // primera zona disputada con el jugador cuya paciencia se agoto y que ya mostro su aviso
+        char FirstFightReadyZone()
         {
             foreach (var zone in new List<char>(_patience.Keys))
             {
-                float p = _patience[zone];
-                if (p <= warnThreshold && !_warned.Contains(zone)) { _warned.Add(zone); EmitWarning(zone); }
-                if (p <= attackThreshold && !_pendingAttacks.Contains(zone)) _pendingAttacks.Add(zone);
+                if (_patience[zone] > attackThreshold || !_warned.Contains(zone)) continue;
+                if (IsDisputant(StatusOf(zone), Owner.Player)) return zone;
             }
-            if (_pendingAttacks.Count > 0 && !_draining && isActiveAndEnabled) StartCoroutine(DrainAttacks());
+            return '.';
         }
 
-        IEnumerator DrainAttacks()
+        // primera zona disputada tensa (cruzo el umbral) que todavia no mostro su aviso
+        char FirstUnwarnedTenseZone()
         {
-            _draining = true;
-            while (_pendingAttacks.Count > 0)
+            foreach (var zone in new List<char>(_patience.Keys))
             {
-                while ((_events != null && _events.IsEventPending) || (_minigame != null && _minigame.IsShowing))
-                    yield return null;
-
-                char zone = _pendingAttacks[0];
-                _pendingAttacks.RemoveAt(0);
-                var st = StatusOf(zone);
-                if (!IsDisputant(st, Owner.Player)) continue; // ya no aplica
-                StartDispute(zone, Rival(st), Owner.Player); // el enemigo ataca; vos defendes
-
-                while (_minigame != null && _minigame.IsShowing) yield return null;
+                if (_patience[zone] > warnThreshold || _warned.Contains(zone)) continue;
+                if (IsDisputant(StatusOf(zone), Owner.Player)) return zone;
             }
-            _draining = false;
+            return '.';
         }
 
         void EmitWarning(char zone)
         {
-            string msg = $"Los rivales de la Zona {zone} estan muy tensos";
+            string msg = $"Los {RivalNameOf(zone)} de la Zona {zone} estan muy tensos";
             Debug.Log("[Territory] AVISO: " + msg);
             if (Model != null) FloatingText.Spawn(Model.ZoneCentroidWorld(zone), msg, warningColor);
             ZoneTense?.Invoke(zone, msg);
             if (_warningPopup != null) _warningPopup.Show(msg);
+        }
+
+        /// <summary>Nombre (para mostrar) del rival del jugador en esa zona disputada.</summary>
+        public string RivalNameOf(char zone)
+        {
+            var st = StatusOf(zone);
+            return IsDisputant(st, Owner.Player) ? Rival(st).Display() : "rivales";
         }
 
         /// <summary>Frase cualitativa de tension (nunca el numero).</summary>
@@ -419,7 +455,6 @@ namespace Salada.Game
             _waves.Spend(cost);
             _patience[zone] = patienceMax; // tregua: se rellena la paciencia
             _warned.Remove(zone);
-            _pendingAttacks.Remove(zone);
             if (Model != null) FloatingText.Spawn(Model.ZoneCentroidWorld(zone), $"Tregua Zona {zone} (-${cost})", new Color(0.5f, 0.8f, 1f));
             return true;
         }
@@ -435,14 +470,23 @@ namespace Salada.Game
             else
             {
                 Owner winner = ap >= dp ? attacker : defender; // sin UI (tests): por poder
-                float margin = Mathf.Clamp01(0.5f + 0.5f * (ap - dp) / Mathf.Max(1f, powerScale));
-                ApplyDisputeOutcome(zone, attacker, defender, winner, margin);
+                ApplyDisputeOutcome(zone, attacker, defender, winner, 0f);
             }
         }
 
+        /// <summary>Puestos que pierde el perdedor segun cuanto MAS poder tiene el ganador en la zona.</summary>
+        int StallLossFor(char zone, Owner winner, Owner loser, int available)
+        {
+            int gap = PowerOf(zone, winner) - PowerOf(zone, loser);
+            if (gap >= powerGapForWipe) return available;           // ventaja aplastante -> arrasa la zona
+            if (gap >= powerGapForDouble) return Mathf.Min(2, available);
+            return 1;                                                // poder igual o menor -> 1
+        }
+
         /// <summary>
-        /// Aplica el resultado: el perdedor pierde puestos. Por defecto la cantidad sale del margen;
-        /// si forcedLoss>=0 se usa esa cantidad fija (para peleas de a poco). notify=false = sin cartel.
+        /// Aplica el resultado: el perdedor pierde puestos. Por defecto la cantidad sale de la
+        /// diferencia de poder en la zona (1 / 2 / todos); si forcedLoss>=0 se usa esa cantidad fija
+        /// (peleas rival-vs-rival de desgaste). notify=false = sin cartel.
         /// </summary>
         public void ApplyDisputeOutcome(char zone, Owner attacker, Owner defender, Owner winner, float margin01,
             bool notify = true, int forcedLoss = -1)
@@ -456,24 +500,29 @@ namespace Salada.Game
             {
                 lossCount = forcedLoss >= 0
                     ? Mathf.Clamp(forcedLoss, 1, loserStalls.Count)
-                    : Mathf.Clamp(Mathf.RoundToInt(Mathf.Lerp(1f, maxStallLoss, Mathf.Clamp01(margin01))), 1, loserStalls.Count);
+                    : StallLossFor(zone, winner, loser, loserStalls.Count);
                 Vector2 anchor = WinnerAnchor(zone, winner);
                 loserStalls.Sort((a, b) => SqrTo(a, anchor).CompareTo(SqrTo(b, anchor)));
                 for (int i = 0; i < lossCount; i++)
                 {
                     var removed = Model.RemoveAny(loserStalls[i].OriginCell);
-                    if (removed != null && removed.View != null) Destroy(removed.View);
+                    if (removed != null)
+                    {
+                        DustBurst.Spawn(Model.CellToWorldCenter(removed.OriginCell)); // polvo al romperse en la guerra
+                        if (removed.View != null) Destroy(removed.View);
+                    }
                 }
             }
 
             ReconcilePatienceEntries();
             // si sigue en disputa, se calma la tension tras la pelea
-            if (_patience.ContainsKey(zone)) { _patience[zone] = patienceMax; _warned.Remove(zone); _pendingAttacks.Remove(zone); }
+            if (_patience.ContainsKey(zone)) { _patience[zone] = patienceMax; _warned.Remove(zone); }
 
             if (notify && Model != null)
             {
-                string who = winner == Owner.Player ? "Ganaste" : $"Gano {winner}";
-                FloatingText.Spawn(Model.ZoneCentroidWorld(zone), $"Zona {zone}: {who} (-{lossCount} a {loser})", _grid.ColorFor(winner));
+                string who = winner == Owner.Player ? "Ganaste" : $"Ganaron los {winner.Display()}";
+                string loserLabel = loser == Owner.Player ? "vos" : "los " + loser.Display();
+                FloatingText.Spawn(Model.ZoneCentroidWorld(zone), $"Zona {zone}: {who} (-{lossCount} a {loserLabel})", _grid.ColorFor(winner));
             }
         }
 

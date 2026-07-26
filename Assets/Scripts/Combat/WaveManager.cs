@@ -79,10 +79,13 @@ namespace Salada.Combat
 
         ExpansionTuning TuningFor(Owner o) => o == Owner.Enemy ? enemyExpansion : neutralExpansion;
 
-        [Header("Balanzas por disputa")]
-        public float reputationPerSale = 0.5f;   // ganar una venta sube reputacion
-        public float hostilityPerSale = 0.3f;    // ganarle una venta al rival sube su hostilidad
-        public float reputationPerEscape = 0.5f; // un cliente que se va sin comprar baja reputacion
+        [Header("Balanzas (cuanto suben/bajan las estadisticas)")]
+        [Tooltip("Reputacion que sube por CADA venta que hagas (no hace falta ganarsela a un rival).")]
+        public float reputationPerSale = 1f;
+        [Tooltip("Hostilidad que sube cuando le ganas una venta a un rival (le sacas un cliente).")]
+        public float hostilityPerSale = 0.3f;
+        [Tooltip("Reputacion que BAJA por cada cliente que un puesto tuyo ataco pero se fue sin comprar.")]
+        public float reputationPerEscape = 0.5f;
 
         public int Money { get; private set; }
         public int Wave { get; private set; }
@@ -372,7 +375,10 @@ namespace Salada.Combat
         void OnEscaped(Client c)
         {
             Escaped++;
-            if (_meters != null) _meters.Add(MeterType.Reputation, -reputationPerEscape); // mal servicio
+            // solo penaliza si un puesto tuyo llego a atacar/convencer a este cliente (lo tenias y lo perdiste).
+            // los clientes que nunca enganchaste (pasaron de largo o fueron del rival) no bajan tu reputacion.
+            if (_meters != null && c.ConvinceBy(Owner.Player) > 0f)
+                _meters.Add(MeterType.Reputation, -reputationPerEscape); // mal servicio
         }
 
         /// <summary>

@@ -51,8 +51,9 @@ namespace Salada.UI
         {
             if (_root == null) { _font = UIFont.Get(); Build(); }
             Clear();
-            AddText($"Zona {zone} en disputa", 22, new Color(1f, 0.85f, 0.5f), FontStyle.Bold, 32);
-            AddText($"Los rivales se ven {territory.TensionLine(zone)}.", 16, new Color(0.85f, 0.88f, 0.94f), FontStyle.Italic, 26);
+            string rival = territory.RivalNameOf(zone);
+            AddText($"Zona {zone} en disputa con los {rival}", 22, new Color(1f, 0.85f, 0.5f), FontStyle.Bold, 32);
+            AddText($"Los {rival} se ven {territory.TensionLine(zone)}.", 16, new Color(0.85f, 0.88f, 0.94f), FontStyle.Italic, 26);
 
             AddButton("Atacar  (−reputacion, +hostilidad)", new Color(0.7f, 0.3f, 0.25f), () =>
             {
