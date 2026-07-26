@@ -30,6 +30,8 @@ namespace Salada.Combat
         public float convinceThreshold = 100f;
         public float clientSize = 0.5f;
         public Color clientColor = new Color(0.15f, 0.35f, 0.95f);
+        [Tooltip("Sprites de los clientes (normal + version por faccion al comprar). Si esta vacio, usa el cuadrado.")]
+        public ClientSkinSet clientSkins;
         public float buyPauseDuration = 1f;
         [Tooltip("Atencion que pierde un cliente por segundo si ningun puesto le pega.")]
         public float convinceDecayPerSec = 5f;
@@ -312,6 +314,9 @@ namespace Salada.Combat
             var go = new GameObject("Client");
             go.transform.SetParent(_clientsParent, false);
             var client = go.AddComponent<Client>();
+            if (clientSkins != null && clientSkins.skins.Count > 0)
+                client.SetSkin(clientSkins.skins[NextInt(clientSkins.skins.Count)]); // cliente random (antes de Init)
+            client.SetExits(_openings); // sale por cualquier salida
             client.Init(grid, worldPath, clientSpeed, convinceThreshold, buyPauseDuration, clientSize, clientColor,
                 convinceDecayPerSec, OnConverted, OnEscaped);
             if (rusher) client.SetRush(rushUntil, clientSpeed * rushSpeedMult, clientSpeed * slowSpeedMult);

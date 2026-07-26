@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a29d20e1c03a044b94a051efe0100b0, type: 3}
+  m_Name: ClientSkinSet
+  m_EditorClassIdentifier: Assembly-CSharp::Salada.Combat.ClientSkinSet
+  skins:
+  - id: p1
+    normalA: {fileID: 21300000, guid: f675caeecd44c684686c4b2caecf27e0, type: 3}
+    normalB: {fileID: 21300000, guid: 94237e93868b45c41bf3383de2b998c9, type: 3}
+    playerA: {fileID: 21300000, guid: 43131dcf355e98046b70b71e034d48f2, type: 3}
+    playerB: {fileID: 21300000, guid: 2c591cf914a87b741ac33ba132d2ee52, type: 3}
+    enemyA: {fileID: 21300000, guid: 9d45195b1840abb4d8a6d7bf9bcf6799, type: 3}
+    enemyB: {fileID: 21300000, guid: 9f72cc396fe548c4097990c2274c3530, type: 3}
+    neutralA: {fileID: 21300000, guid: 8eb525648f9be5b48894e00c8d989f05, type: 3}
+    neutralB: {fileID: 21300000, guid: e05e25279747d0e459ba58dc5788d3c9, type: 3}
+  - id: p2
+    normalA: {fileID: 21300000, guid: 791e1d0b83132b34792746d66cc53fe3, type: 3}
+    normalB: {fileID: 21300000, guid: 2a2bfb876670cad41aa2de450c0cb825, type: 3}
+    playerA: {fileID: 21300000, guid: aac531a62065b1f4cbf040fe88856196, type: 3}
+    playerB: {fileID: 21300000, guid: fd49ca6f94c590a4bb15d71ff4642259, type: 3}
+    enemyA: {fileID: 21300000, guid: 7f87be16f382b5244baf9614c1af46d9, type: 3}
+    enemyB: {fileID: 21300000, guid: 3935a3e09397cee4bb71119297fda12f, type: 3}
+    neutralA: {fileID: 21300000, guid: eb45962b8d611b44aa1fe1dc2cb05fb3, type: 3}
+    neutralB: {fileID: 21300000, guid: 0c2c94abf6b792b449515404902bac16, type: 3}
+  - id: p3
+    normalA: {fileID: 21300000, guid: b390999e05051b74bb392fcd49a81366, type: 3}
+    normalB: {fileID: 21300000, guid: d793952808b3df64a8abf93ab90bcf50, type: 3}
+    playerA: {fileID: 21300000, guid: cf44177f85cca624cb0f7b037a908051, type: 3}
+    playerB: {fileID: 21300000, guid: 6f586a340f209144c8d29894f8164e9e, type: 3}
+    enemyA: {fileID: 21300000, guid: 812b691a373d6554a8157cf371fd044d, type: 3}
+    enemyB: {fileID: 21300000, guid: 7ebe20d94fd848d42b93261bfca3e70f, type: 3}
+    neutralA: {fileID: 21300000, guid: 268621bf866982e4f9b8bc96882d646e, type: 3}
+    neutralB: {fileID: 21300000, guid: 81c2af66c514a6b4fac2ffa3b65cf5c7, type: 3}
+  - id: p4
+    normalA: {fileID: 21300000, guid: 07add0ab8d963994dbbe67960b8acb05, type: 3}
+    normalB: {fileID: 21300000, guid: 8df036ce44c9d834f8469aa314ab7698, type: 3}
+    playerA: {fileID: 21300000, guid: f03bd5f3bc189c8479038cb2dc53c5af, type: 3}
+    playerB: {fileID: 21300000, guid: eba1f008f07c59c418ecf7f1c7a7875a, type: 3}
+    enemyA: {fileID: 21300000, guid: 20f1a5b107021684d937e9e76c39f8c7, type: 3}
+    enemyB: {fileID: 21300000, guid: cd2a2f9e4e9388d4b8efbf4a33f72bda, type: 3}
+    neutralA: {fileID: 21300000, guid: 6094ea71430ff6f47878ae47ac447e96, type: 3}
+    neutralB: {fileID: 21300000, guid: 985d07b9fcce66442bd94d0edb53e9d1, type: 3}
+  - id: p5
+    normalA: {fileID: 21300000, guid: 3f1e1e347d38f944ca63e8a8311362be, type: 3}
+    normalB: {fileID: 21300000, guid: 8d1593810a3ac9849b1c0b1427b17615, type: 3}
+    playerA: {fileID: 21300000, guid: 69d30a869bfc53649bfb151c292fc498, type: 3}
+    playerB: {fileID: 21300000, guid: 90c1b5186cd070648b939f85fa319340, type: 3}
+    enemyA: {fileID: 21300000, guid: 7a898b66720f42c429c43d0c483ff314, type: 3}
+    enemyB: {fileID: 21300000, guid: ea46df2d63f410d48a42a205ea7a39c9, type: 3}
+    neutralA: {fileID: 21300000, guid: a9a6bf7ec84c5dc4f98e81f5e570cf68, type: 3}
+    neutralB: {fileID: 21300000, guid: 555a5b79c6357e545868e93a40f04128, type: 3}
+  - id: p6
+    normalA: {fileID: 21300000, guid: 27e73298ce2ec104fb49df58ef48cde6, type: 3}
+    normalB: {fileID: 21300000, guid: d934b7bd3a1856f4bb1ba7f0810d7d3f, type: 3}
+    playerA: {fileID: 21300000, guid: 8d8634792aa640d4d8819bb66206d38c, type: 3}
+    playerB: {fileID: 21300000, guid: 75611aa23c436c7459044566f056aa0c, type: 3}
+    enemyA: {fileID: 21300000, guid: f42b0bab31f1a404eb73cb312f85dc5f, type: 3}
+    enemyB: {fileID: 21300000, guid: 4ab610dda3aaa7c47bcd1e8f197ded18, type: 3}
+    neutralA: {fileID: 21300000, guid: 28649507b0de5a1408e43c8a09573d3e, type: 3}
+    neutralB: {fileID: 21300000, guid: 495f5d90bbf79094f921bae07119880f, type: 3}
