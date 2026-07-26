@@ -10,27 +10,27 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8a4b9b9cde64d984db7782bf255b0d6c, type: 3}
-  m_Name: Ev_Bienvenida
+  m_Name: Ev_TerritorioBajoControl
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.GameEvent
-  id: ev_bienvenida
-  title: "Primer d\xEDa en La Saladita"
+  id: 1bf4f8f212fc4b4ba39bf3c51000d67f
+  title: Territorio bajo control
   speaker: {fileID: 11400000, guid: ebb13c032a1ec9f45a1f737e7c4eb783, type: 2}
-  description: Bienvenido, pibe. Aca se labura duro pero se hace la diferencia. Cuidate
-    de los feriantes.
+  description: "Controlamos casi todo el territorio de La Saladita, nadie nos va
+    a volver a joder nunca m\xE1s."
   mandatory: 1
   repeatable: 0
   conditions:
-  - type: 0
-    intValue: 1
-    value: 1
+  - type: 7
+    intValue: 0
+    value: 75
     meter: 0
-    mode: 1
+    mode: 0
     events: []
     options: []
   options:
-  - id: ev_bienvenida_opt_cumbia
-    label: Mandale cumbia
-    outcome: Suerte.
+  - id: d02e54333c2048fdbd502999ce8cc0ba
+    label: "Por fin se termina este estr\xE9s loco."
+    outcome: :)
     hostility: 0
     reputation: 0
     happiness: 0
@@ -40,11 +40,11 @@ MonoBehaviour:
     salaryIncreasePercent: 0
     destroyBiggestStall: 0
     triggerGameOver: 0
-    triggerGameWin: 0
+    triggerGameWin: 1
     special: 0
-    specialMagnitude: 1
+    specialMagnitude: 0
     special2: 0
-    specialMagnitude2: 1
+    specialMagnitude2: 0
     specialWaves: 0
     specialOneDayOnly: 0
     specialPermanent: 0

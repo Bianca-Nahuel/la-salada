@@ -27,6 +27,7 @@ namespace Salada.Game
         private BusinessMeters _meters;
         private GameEffects _effects;
         private GridManager _grid;
+        private TerritoryManager _territory;
         private EventPopup _popup;
         private GameOverController _gameOver;
 
@@ -50,6 +51,7 @@ namespace Salada.Game
             _meters = FindFirstObjectByType<BusinessMeters>();
             _effects = FindFirstObjectByType<GameEffects>();
             _grid = FindFirstObjectByType<GridManager>();
+            _territory = FindFirstObjectByType<TerritoryManager>();
             _popup = FindFirstObjectByType<EventPopup>(FindObjectsInactive.Include);
             _gameOver = FindFirstObjectByType<GameOverController>();
             if (_gameOver == null) _gameOver = gameObject.AddComponent<GameOverController>();
@@ -156,6 +158,8 @@ namespace Salada.Game
                 case ConditionType.MeterBelow: return _meters != null && _meters.Get(c.meter) < c.value;
                 case ConditionType.EventsHappened: return PassEventsHappened(c);
                 case ConditionType.OptionsChosen: return PassOptionsChosen(c);
+                case ConditionType.TerritoryAbove: return _territory != null && _territory.PlayerDominancePercent() > c.value;
+                case ConditionType.TerritoryBelow: return _territory != null && _territory.PlayerDominancePercent() < c.value;
                 default: return true;
             }
         }

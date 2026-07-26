@@ -214,6 +214,12 @@ namespace Salada.EditorTools
                     EditorGUILayout.PropertyField(mode, new GUIContent("Modo (lista de opciones)"));
                     DrawOptionRefList(options);
                     break;
+                case ConditionType.TerritoryAbove:
+                    EditorGUILayout.PropertyField(value, new GUIContent("% Dominio >"));
+                    break;
+                case ConditionType.TerritoryBelow:
+                    EditorGUILayout.PropertyField(value, new GUIContent("% Dominio <"));
+                    break;
             }
         }
 

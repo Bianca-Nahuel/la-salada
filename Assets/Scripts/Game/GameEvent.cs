@@ -13,7 +13,9 @@ namespace Salada.Game
         MeterAbove,      // medidor 'meter' > value
         MeterBelow,      // medidor 'meter' < value
         EventsHappened,  // eventos de 'events' ocurrieron (segun 'mode': alguno o todos)
-        OptionsChosen    // opciones de 'options' fueron elegidas (segun 'mode': alguna o todas)
+        OptionsChosen,   // opciones de 'options' fueron elegidas (segun 'mode': alguna o todas)
+        TerritoryAbove,  // % de dominio del jugador (TerritoryManager) > value
+        TerritoryBelow   // % de dominio del jugador (TerritoryManager) < value
     }
 
     /// <summary>Para condiciones de lista (EventsHappened/OptionsChosen): alguno o todos.</summary>
