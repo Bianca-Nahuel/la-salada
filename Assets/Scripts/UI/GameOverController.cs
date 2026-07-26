@@ -5,14 +5,16 @@ using UnityEngine.SceneManagement;
 namespace Salada.UI
 {
     /// <summary>
-    /// Pantalla de Game Over: overlay simple con mensaje y boton para reiniciar la escena.
-    /// Se autoconstruye la primera vez que se llama a Show(). No hace falta agregarla a la
-    /// escena manualmente: el EventManager la crea (AddComponent) si no encuentra una.
+    /// Pantalla de fin de partida (derrota o victoria): overlay simple con mensaje y boton
+    /// para reiniciar la escena. Se autoconstruye la primera vez que se llama a Show(). No
+    /// hace falta agregarla a la escena manualmente: el EventManager la crea (AddComponent)
+    /// si no encuentra una.
     /// </summary>
     public class GameOverController : MonoBehaviour
     {
         private GameObject _root;
         private Transform _content;
+        private Image _panelImage;
         private Font _font;
 
         void EnsureBuilt()
@@ -42,7 +44,7 @@ namespace Salada.UI
             var prt = panel.GetComponent<RectTransform>();
             prt.anchorMin = prt.anchorMax = new Vector2(0.5f, 0.5f); prt.pivot = new Vector2(0.5f, 0.5f);
             prt.sizeDelta = new Vector2(480, 100);
-            panel.GetComponent<Image>().color = new Color(0.16f, 0.05f, 0.05f, 1f);
+            _panelImage = panel.GetComponent<Image>();
             var vlg = panel.GetComponent<VerticalLayoutGroup>();
             vlg.padding = new RectOffset(24, 24, 20, 20); vlg.spacing = 12;
             vlg.childControlWidth = true; vlg.childForceExpandWidth = true; vlg.childControlHeight = true; vlg.childForceExpandHeight = false;
@@ -52,14 +54,19 @@ namespace Salada.UI
             _root.SetActive(false);
         }
 
-        public void Show(string message)
+        /// <summary>Muestra la pantalla de fin de partida. isWin=true para el final bueno (victoria).</summary>
+        public void Show(string message, bool isWin = false)
         {
             EnsureBuilt();
             for (int i = _content.childCount - 1; i >= 0; i--) Destroy(_content.GetChild(i).gameObject);
 
-            AddText("Game Over", 28, new Color(0.95f, 0.35f, 0.3f), FontStyle.Bold, 36);
-            AddText(string.IsNullOrEmpty(message) ? "Se acabo la salada para vos." : message, 17, new Color(0.9f, 0.9f, 0.92f), FontStyle.Normal, 50);
-            AddButton("Reiniciar", () =>
+            var accent = isWin ? new Color(0.35f, 0.9f, 0.4f) : new Color(0.95f, 0.35f, 0.3f);
+            _panelImage.color = isWin ? new Color(0.05f, 0.14f, 0.06f, 1f) : new Color(0.16f, 0.05f, 0.05f, 1f);
+            string defaultMsg = isWin ? "Le diste vuelta a La Salada." : "Se acabo la salada para vos.";
+
+            AddText(isWin ? "Ganaste!" : "Game Over", 28, accent, FontStyle.Bold, 36);
+            AddText(string.IsNullOrEmpty(message) ? defaultMsg : message, 17, new Color(0.9f, 0.9f, 0.92f), FontStyle.Normal, 50);
+            AddButton("Reiniciar", accent, () =>
             {
                 Time.timeScale = 1f;
                 SceneManager.LoadScene(SceneManager.GetActiveScene().name);
@@ -80,11 +87,11 @@ namespace Salada.UI
             t.horizontalOverflow = HorizontalWrapMode.Wrap; t.verticalOverflow = VerticalWrapMode.Overflow;
         }
 
-        void AddButton(string label, UnityEngine.Events.UnityAction onClick)
+        void AddButton(string label, Color color, UnityEngine.Events.UnityAction onClick)
         {
             var go = new GameObject("Btn", typeof(RectTransform), typeof(Image), typeof(Button));
             go.transform.SetParent(_content, false);
-            go.GetComponent<Image>().color = new Color(0.5f, 0.2f, 0.2f);
+            go.GetComponent<Image>().color = Color.Lerp(color, Color.black, 0.55f);
             go.AddComponent<LayoutElement>().minHeight = 50;
             var btn = go.GetComponent<Button>();
             btn.onClick.AddListener(onClick);

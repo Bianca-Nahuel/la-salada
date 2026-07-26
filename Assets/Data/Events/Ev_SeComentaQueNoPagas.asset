@@ -10,59 +10,38 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8a4b9b9cde64d984db7782bf255b0d6c, type: 3}
-  m_Name: Ev_QueAndaPasando
+  m_Name: Ev_SeComentaQueNoPagas
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.GameEvent
-  id: ev_que_anda_pasando
-  title: "\xBFQu\xE9 anda pasando, compa\xF1ero?"
+  id: bc171a098ae24add9bc9bf3589504fde
+  title: "Se comenta que no les pag\xE1s a tus empleados"
   speaker: {fileID: 11400000, guid: 00112233445566778899aabbccddeef2, type: 2}
-  description: Vinieron a apretarte por no atender los reclamos salariales de tus
-    empleados.
-  mandatory: 1
+  description: Con el sueldo de la gente no se jode capo.
+  mandatory: 0
   repeatable: 0
   conditions:
   - type: 0
     intValue: 5
-    value: 1
-    meter: 0
-    mode: 1
-    events: []
-    options: []
-  - type: 6
-    intValue: 0
-    value: 1
+    value: 0
     meter: 0
     mode: 0
     events: []
+    options: []
+  - type: 6
+    intValue: 5
+    value: 0
+    meter: 0
+    mode: 1
+    events: []
     options:
-    - gameEvent: {fileID: 11400000, guid: 4c30bb86c720dc047867b20e1a32509b, type: 2}
-      optionId: ev_aumento_opt_negar
+    - gameEvent: {fileID: 11400000, guid: a2a6853dd18e06c468e6519998f4b339, type: 2}
+      optionId: 73997ad212dd4bc4a7e9ca5f7a48050b
   options:
-  - id: ev_qap_opt_dar_aumento
-    label: Dar aumento
-    outcome: 
+  - id: 33d1833252ff4308b1877d0b13c2bdac
+    label: Pagar sueldos con intereses.
+    outcome: "Ah, me parec\xEDa."
     hostility: 0
     reputation: 0
     happiness: 10
-    profit: 0
-    money: 0
-    moneyPerStall: 0
-    salaryIncreasePercent: 0.1
-    destroyBiggestStall: 0
-    triggerGameOver: 0
-    triggerGameWin: 0
-    special: 0
-    specialMagnitude: 1
-    special2: 0
-    specialMagnitude2: 1
-    specialWaves: 0
-    specialOneDayOnly: 0
-    specialPermanent: 0
-  - id: ev_qap_opt_coimear_maton
-    label: Coimear maton para que no joda
-    outcome: Nos estamos entendiendo.
-    hostility: 0
-    reputation: 0
-    happiness: -5
     profit: 0
     money: -100
     moneyPerStall: 0
@@ -71,18 +50,18 @@ MonoBehaviour:
     triggerGameOver: 0
     triggerGameWin: 0
     special: 0
-    specialMagnitude: 1
+    specialMagnitude: 0
     special2: 0
-    specialMagnitude2: 1
+    specialMagnitude2: 0
     specialWaves: 0
     specialOneDayOnly: 0
     specialPermanent: 0
-  - id: ev_qap_opt_pararsele
-    label: Pararsele de mano
-    outcome: Ah, si? Ya vas a ver vos...
+  - id: 33d1833252ff4308b1877d0b13c2bdac
+    label: "Tomatel\xE1, les pago cuando pueda."
+    outcome: "As\xED no funciona."
     hostility: 0
     reputation: 0
-    happiness: -10
+    happiness: -15
     profit: 0
     money: 0
     moneyPerStall: 0
@@ -91,9 +70,9 @@ MonoBehaviour:
     triggerGameOver: 0
     triggerGameWin: 0
     special: 0
-    specialMagnitude: 1
+    specialMagnitude: 0
     special2: 0
-    specialMagnitude2: 1
+    specialMagnitude2: 0
     specialWaves: 0
     specialOneDayOnly: 0
     specialPermanent: 0

@@ -160,12 +160,13 @@ namespace Salada.UI
             var outcome = opt.outcome;
             AddText(string.IsNullOrEmpty(outcome) ? "..." : outcome, 18, new Color(0.9f, 0.92f, 0.96f), FontStyle.Italic, 60, TextAnchor.UpperLeft);
 
-            if (opt.triggerGameOver)
+            if (opt.triggerGameOver || opt.triggerGameWin)
             {
-                AddButton("...", new Color(0.5f, 0.2f, 0.2f), () =>
+                bool isWin = opt.triggerGameWin;
+                AddButton("...", isWin ? new Color(0.2f, 0.5f, 0.25f) : new Color(0.5f, 0.2f, 0.2f), () =>
                 {
                     _root.SetActive(false);
-                    _gameOver?.Show(outcome);
+                    _gameOver?.Show(outcome, isWin);
                 });
             }
             else
@@ -241,6 +242,7 @@ namespace Salada.UI
             if (o.salaryIncreasePercent != 0) parts.Add($"Sueldo x puesto {(o.salaryIncreasePercent > 0 ? "+" : "")}{o.salaryIncreasePercent:0.#%}");
             if (o.destroyBiggestStall) parts.Add("Destruye el puesto mas grande");
             if (o.triggerGameOver) parts.Add("GAME OVER");
+            if (o.triggerGameWin) parts.Add("VICTORIA");
             string dur = o.specialPermanent ? "permanente" : (o.specialOneDayOnly ? "hoy" : $"x{o.specialWaves}");
             if (o.special != EffectType.None) parts.Add($"{GameEffects.Label(o.special, o.specialMagnitude)} ({dur})");
             if (o.special2 != EffectType.None) parts.Add($"{GameEffects.Label(o.special2, o.specialMagnitude2)} ({dur})");

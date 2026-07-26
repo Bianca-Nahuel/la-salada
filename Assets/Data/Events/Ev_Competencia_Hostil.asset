@@ -40,6 +40,7 @@ MonoBehaviour:
     salaryIncreasePercent: 0
     destroyBiggestStall: 0
     triggerGameOver: 0
+    triggerGameWin: 0
     special: 0
     specialMagnitude: 0
     special2: 0
@@ -50,7 +51,7 @@ MonoBehaviour:
   - id: 55539084f9354804987523d7d2b5f05f
     label: Negociar la paz.
     outcome: Me parece justo.
-    hostility: -10
+    hostility: -20
     reputation: 0
     happiness: 0
     profit: 0
@@ -59,6 +60,7 @@ MonoBehaviour:
     salaryIncreasePercent: 0
     destroyBiggestStall: 0
     triggerGameOver: 0
+    triggerGameWin: 0
     special: 0
     specialMagnitude: 0
     special2: 0
@@ -78,6 +80,7 @@ MonoBehaviour:
     salaryIncreasePercent: 0
     destroyBiggestStall: 0
     triggerGameOver: 0
+    triggerGameWin: 0
     special: 0
     specialMagnitude: 0
     special2: 0

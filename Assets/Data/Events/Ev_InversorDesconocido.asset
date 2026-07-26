@@ -10,38 +10,30 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8a4b9b9cde64d984db7782bf255b0d6c, type: 3}
-  m_Name: Ev_YendoDeMambo
+  m_Name: Ev_InversorDesconocido
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.GameEvent
-  id: e68e65cf7190484fa3e42b4324d2bd17
-  title: "Te est\xE1s yendo de mambo..."
-  speaker: {fileID: 11400000, guid: 00112233445566778899aabbccddeef1, type: 2}
-  description: "Est\xE1s re zarpado chab\xF3n. Si te qued\xE1s de ac\xE1 para all\xE1
-    t\xE1 todo bien, sino nos vas a encontrar."
-  mandatory: 1
-  repeatable: 0
+  id: 40f62389fff444e7900f365f7e12e465
+  title: Inversor desconocido
+  speaker: {fileID: 11400000, guid: ebb13c032a1ec9f45a1f737e7c4eb783, type: 2}
+  description: "Recibimos dinero para financiar nuestras actividades \xBFEn qu\xE9
+    deber\xEDamos invertirlo?"
+  mandatory: 0
+  repeatable: 1
   conditions:
-  - type: 3
-    intValue: 0
-    value: 80
+  - type: 0
+    intValue: 2
+    value: 0
     meter: 0
     mode: 0
     events: []
     options: []
-  - type: 5
-    intValue: 0
-    value: 80
-    meter: 0
-    mode: 1
-    events:
-    - {fileID: 11400000, guid: 0860ba01a655bb24fabd31db81e8ce72, type: 2}
-    options: []
   options:
-  - id: 8d6b0e4c4e2a4f0da14ca71be8c81526
-    label: '*Escupir*'
-    outcome: Sos pollo amigo.
-    hostility: 20
+  - id: 698d8342337d484f974155a4125ecab3
+    label: Bonos para los empleados.
+    outcome: Ok.
+    hostility: 0
     reputation: 0
-    happiness: -10
+    happiness: 30
     profit: 0
     money: 0
     moneyPerStall: 0
@@ -56,14 +48,14 @@ MonoBehaviour:
     specialWaves: 0
     specialOneDayOnly: 0
     specialPermanent: 0
-  - id: 8d6b0e4c4e2a4f0da14ca71be8c81526
-    label: Negociar la paz.
-    outcome: "As\xED tamos bien."
+  - id: 698d8342337d484f974155a4125ecab3
+    label: Tranzar con la competencia.
+    outcome: Ok.
     hostility: -30
     reputation: 0
-    happiness: 5
+    happiness: 0
     profit: 0
-    money: -100
+    money: 0
     moneyPerStall: 0
     salaryIncreasePercent: 0
     destroyBiggestStall: 0
@@ -76,13 +68,33 @@ MonoBehaviour:
     specialWaves: 0
     specialOneDayOnly: 0
     specialPermanent: 0
-  - id: 8d6b0e4c4e2a4f0da14ca71be8c81526
-    label: Pedir disculpas.
-    outcome: "Que no me entere que and\xE1s zarpado."
-    hostility: -5
-    reputation: 0
-    happiness: 5
+  - id: 698d8342337d484f974155a4125ecab3
+    label: Propaganda
+    outcome: Ok.
+    hostility: 0
+    reputation: 20
+    happiness: 0
     profit: 0
+    money: 0
+    moneyPerStall: 0
+    salaryIncreasePercent: 0
+    destroyBiggestStall: 0
+    triggerGameOver: 0
+    triggerGameWin: 0
+    special: 0
+    specialMagnitude: 0
+    special2: 0
+    specialMagnitude2: 0
+    specialWaves: 0
+    specialOneDayOnly: 0
+    specialPermanent: 0
+  - id: 698d8342337d484f974155a4125ecab3
+    label: "Mejorar log\xEDstica."
+    outcome: Ok.
+    hostility: 0
+    reputation: 0
+    happiness: 0
+    profit: 10
     money: 0
     moneyPerStall: 0
     salaryIncreasePercent: 0

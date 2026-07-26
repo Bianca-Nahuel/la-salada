@@ -65,8 +65,10 @@ namespace Salada.Game
         public float salaryIncreasePercent;
         [Tooltip("Destruye el puesto del jugador con mayor superficie (footprint).")]
         public bool destroyBiggestStall;
-        [Tooltip("Termina la partida (Game Over) al elegir esta opcion.")]
+        [Tooltip("Termina la partida en derrota (Game Over) al elegir esta opcion.")]
         public bool triggerGameOver;
+        [Tooltip("Termina la partida en victoria (final bueno) al elegir esta opcion.")]
+        public bool triggerGameWin;
 
         [Header("Efecto especial (opcional, hasta 2)")]
         public EffectType special = EffectType.None;

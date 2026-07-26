@@ -10,79 +10,69 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8a4b9b9cde64d984db7782bf255b0d6c, type: 3}
-  m_Name: Ev_QueAndaPasando
+  m_Name: Ev_LosEmpleadosEstanDescontentos
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.GameEvent
-  id: ev_que_anda_pasando
-  title: "\xBFQu\xE9 anda pasando, compa\xF1ero?"
+  id: 6fafca2cd1ec4a38b999a9ffc0bacc3e
+  title: "Los empleados est\xE1n descontentos"
   speaker: {fileID: 11400000, guid: 00112233445566778899aabbccddeef2, type: 2}
-  description: Vinieron a apretarte por no atender los reclamos salariales de tus
-    empleados.
+  description: Tenemos reclamos de las condiciones laborales en este establecimiento
   mandatory: 1
   repeatable: 0
   conditions:
-  - type: 0
-    intValue: 5
-    value: 1
-    meter: 0
-    mode: 1
-    events: []
-    options: []
-  - type: 6
+  - type: 4
     intValue: 0
-    value: 1
-    meter: 0
+    value: 15
+    meter: 2
     mode: 0
     events: []
-    options:
-    - gameEvent: {fileID: 11400000, guid: 4c30bb86c720dc047867b20e1a32509b, type: 2}
-      optionId: ev_aumento_opt_negar
+    options: []
   options:
-  - id: ev_qap_opt_dar_aumento
-    label: Dar aumento
-    outcome: 
+  - id: 429a8cddc75a4a74b56b3989f9e68be4
+    label: Aumentar sueldos.
+    outcome: "L\xF3gico."
     hostility: 0
     reputation: 0
-    happiness: 10
+    happiness: 30
     profit: 0
     money: 0
     moneyPerStall: 0
-    salaryIncreasePercent: 0.1
+    salaryIncreasePercent: 15
     destroyBiggestStall: 0
     triggerGameOver: 0
     triggerGameWin: 0
     special: 0
-    specialMagnitude: 1
+    specialMagnitude: 0
     special2: 0
-    specialMagnitude2: 1
+    specialMagnitude2: 0
     specialWaves: 0
     specialOneDayOnly: 0
     specialPermanent: 0
-  - id: ev_qap_opt_coimear_maton
-    label: Coimear maton para que no joda
-    outcome: Nos estamos entendiendo.
+  - id: 429a8cddc75a4a74b56b3989f9e68be4
+    label: Dar bono.
+    outcome: Algo es algo.
     hostility: 0
     reputation: 0
-    happiness: -5
+    happiness: 20
     profit: 0
-    money: -100
+    money: -50
     moneyPerStall: 0
     salaryIncreasePercent: 0
     destroyBiggestStall: 0
     triggerGameOver: 0
     triggerGameWin: 0
     special: 0
-    specialMagnitude: 1
+    specialMagnitude: 0
     special2: 0
-    specialMagnitude2: 1
+    specialMagnitude2: 0
     specialWaves: 0
     specialOneDayOnly: 0
     specialPermanent: 0
-  - id: ev_qap_opt_pararsele
-    label: Pararsele de mano
-    outcome: Ah, si? Ya vas a ver vos...
+  - id: 429a8cddc75a4a74b56b3989f9e68be4
+    label: Son unos caraduras.
+    outcome: Ojito.
     hostility: 0
     reputation: 0
-    happiness: -10
+    happiness: 0
     profit: 0
     money: 0
     moneyPerStall: 0
@@ -91,9 +81,9 @@ MonoBehaviour:
     triggerGameOver: 0
     triggerGameWin: 0
     special: 0
-    specialMagnitude: 1
+    specialMagnitude: 0
     special2: 0
-    specialMagnitude2: 1
+    specialMagnitude2: 0
     specialWaves: 0
     specialOneDayOnly: 0
     specialPermanent: 0

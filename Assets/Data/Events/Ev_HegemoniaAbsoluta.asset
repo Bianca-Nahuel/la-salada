@@ -10,34 +10,34 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8a4b9b9cde64d984db7782bf255b0d6c, type: 3}
-  m_Name: Ev_Endeudados
+  m_Name: Ev_HegemoniaAbsoluta
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.GameEvent
-  id: 4bcea793a14a4b0c89599d86bf1cbe53
-  title: Endeudados
+  id: f45c7f5f462d4cc98d73e163ba09046e
+  title: "Hegemon\xEDa absoluta"
   speaker: {fileID: 11400000, guid: ebb13c032a1ec9f45a1f737e7c4eb783, type: 2}
-  description: "Estamos en n\xFAmeros rojos, tenemos que solucionarlo lo antes posible
-    o vamos a quebrar. "
-  mandatory: 1
+  description: Logramos posicionarnos como los mejores vendedores de La Salada.
+  mandatory: 0
   repeatable: 0
   conditions:
-  - type: 0
+  - type: 3
     intValue: 0
-    value: 0
-    meter: 0
+    value: 90
+    meter: 1
     mode: 0
     events: []
     options: []
-  - type: 2
+  - type: 5
     intValue: 0
-    value: 0
-    meter: 0
-    mode: 0
-    events: []
+    value: 90
+    meter: 1
+    mode: 1
+    events:
+    - {fileID: 11400000, guid: 5b344a9973541134ca4d5a6628731c96, type: 2}
     options: []
   options:
-  - id: 7ce7aa456cb84c689fc4fa819c062acd
-    label: Vamos a hacer lo posible
-    outcome: Dale que remontamos.
+  - id: ce0cb0ab119f46049f53004819ba9710
+    label: "La ten\xE9s adentro Adidas."
+    outcome: :)
     hostility: 0
     reputation: 0
     happiness: 0
@@ -47,7 +47,7 @@ MonoBehaviour:
     salaryIncreasePercent: 0
     destroyBiggestStall: 0
     triggerGameOver: 0
-    triggerGameWin: 0
+    triggerGameWin: 1
     special: 0
     specialMagnitude: 0
     special2: 0

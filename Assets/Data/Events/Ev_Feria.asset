@@ -39,6 +39,7 @@ MonoBehaviour:
     salaryIncreasePercent: 0
     destroyBiggestStall: 0
     triggerGameOver: 0
+    triggerGameWin: 0
     special: 1
     specialMagnitude: 1.5
     special2: 0
@@ -58,6 +59,7 @@ MonoBehaviour:
     salaryIncreasePercent: 0
     destroyBiggestStall: 0
     triggerGameOver: 0
+    triggerGameWin: 0
     special: 1
     specialMagnitude: 1.5
     special2: 3
@@ -77,6 +79,7 @@ MonoBehaviour:
     salaryIncreasePercent: 0
     destroyBiggestStall: 0
     triggerGameOver: 0
+    triggerGameWin: 0
     special: 0
     specialMagnitude: 1
     special2: 0

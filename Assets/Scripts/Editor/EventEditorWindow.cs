@@ -295,6 +295,7 @@ namespace Salada.EditorTools
                 EditorGUILayout.PropertyField(opt.FindPropertyRelative("salaryIncreasePercent"));
                 EditorGUILayout.PropertyField(opt.FindPropertyRelative("destroyBiggestStall"));
                 EditorGUILayout.PropertyField(opt.FindPropertyRelative("triggerGameOver"));
+                EditorGUILayout.PropertyField(opt.FindPropertyRelative("triggerGameWin"));
 
                 EditorGUILayout.LabelField("Efecto especial (opcional, hasta 2)");
                 EditorGUILayout.PropertyField(opt.FindPropertyRelative("special"));

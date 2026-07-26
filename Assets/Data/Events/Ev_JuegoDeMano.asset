@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.GameEvent
   id: ev_juego_de_mano
   title: Juego de mano...
-  speaker: {fileID: 11400000, guid: 00112233445566778899aabbccddeef2, type: 2}
+  speaker: {fileID: 11400000, guid: b1ae44a8815f63744a38535e8ca6e0f4, type: 2}
   description: Ves una intimidante cara conocida alejarse corriendo de uno de tus
     puestos, ahora completamente destruido.
   mandatory: 1
@@ -49,6 +49,7 @@ MonoBehaviour:
     salaryIncreasePercent: 0
     destroyBiggestStall: 1
     triggerGameOver: 0
+    triggerGameWin: 0
     special: 0
     specialMagnitude: 1
     special2: 0

@@ -10,40 +10,32 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8a4b9b9cde64d984db7782bf255b0d6c, type: 3}
-  m_Name: Ev_Quejas
+  m_Name: Ev_InversionRentable
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.GameEvent
-  id: e450754ed8a042f089cfeb557141d709
-  title: Quejas de clientes
-  speaker: {fileID: 11400000, guid: 700e3c38e6afdcc49a04fc5311043ea4, type: 2}
-  description: "La calidad ha bajado considerablemente \xBFNo me hace un descuentito?"
+  id: e7273395bfee43fe83889f254f5a7ef1
+  title: "Inversi\xF3n rentable"
+  speaker: {fileID: 11400000, guid: ebb13c032a1ec9f45a1f737e7c4eb783, type: 2}
+  description: Estoy laburando un trato que puede servirnos para el negocio, pero
+    necesito guita.
   mandatory: 0
-  repeatable: 1
+  repeatable: 0
   conditions:
-  - type: 0
-    intValue: 4
-    value: 0
+  - type: 1
+    intValue: 0
+    value: 1000
     meter: 0
     mode: 0
     events: []
     options: []
-  - type: 6
-    intValue: 4
-    value: 0
-    meter: 0
-    mode: 1
-    events: []
-    options:
-    - gameEvent: {fileID: 11400000, guid: bf13091b76e9d074f8a7063f6ddef60e, type: 2}
-      optionId: ev_trucha_opt_dametodo
   options:
-  - id: 047b5efd616b40a2bd65d95719539ca2
-    label: Bueno dale
-    outcome: "Ahora s\xED lo vale... \xA1Gracias!"
+  - id: 2a2716504ce04e4cbdbe3dd8ecc5348b
+    label: "Dale, tom\xE1."
+    outcome: Joya, va a dar sus frutos.
     hostility: 0
-    reputation: 5
+    reputation: 0
     happiness: 0
     profit: 0
-    money: -25
+    money: -500
     moneyPerStall: 0
     salaryIncreasePercent: 0
     destroyBiggestStall: 0
@@ -56,11 +48,11 @@ MonoBehaviour:
     specialWaves: 0
     specialOneDayOnly: 0
     specialPermanent: 0
-  - id: 047b5efd616b40a2bd65d95719539ca2
-    label: "\xBFQu\xE9 descuentito? Tomatel\xE1"
-    outcome: "Qu\xE9 amarrete"
+  - id: 2a2716504ce04e4cbdbe3dd8ecc5348b
+    label: Na, es una banda.
+    outcome: Estamos perdiendo una re oportunidad viejo.
     hostility: 0
-    reputation: -10
+    reputation: 0
     happiness: 0
     profit: 0
     money: 0

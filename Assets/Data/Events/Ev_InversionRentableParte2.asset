@@ -10,40 +10,33 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8a4b9b9cde64d984db7782bf255b0d6c, type: 3}
-  m_Name: Ev_Quejas
+  m_Name: Ev_InversionRentableParte2
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.GameEvent
-  id: e450754ed8a042f089cfeb557141d709
-  title: Quejas de clientes
-  speaker: {fileID: 11400000, guid: 700e3c38e6afdcc49a04fc5311043ea4, type: 2}
-  description: "La calidad ha bajado considerablemente \xBFNo me hace un descuentito?"
+  id: cc78fe8aefa2439681118661074dab54
+  title: Inversion rentable parte 2
+  speaker: {fileID: 11400000, guid: ebb13c032a1ec9f45a1f737e7c4eb783, type: 2}
+  description: "El trato ya est\xE1 casi cerrado, es lo que nos falta para poder
+    dejar de laburar al fin. Pero falta m\xE1s guita."
   mandatory: 0
-  repeatable: 1
+  repeatable: 0
   conditions:
-  - type: 0
-    intValue: 4
-    value: 0
-    meter: 0
-    mode: 0
-    events: []
-    options: []
-  - type: 6
-    intValue: 4
+  - type: 5
+    intValue: 0
     value: 0
     meter: 0
     mode: 1
-    events: []
-    options:
-    - gameEvent: {fileID: 11400000, guid: bf13091b76e9d074f8a7063f6ddef60e, type: 2}
-      optionId: ev_trucha_opt_dametodo
+    events:
+    - {fileID: 11400000, guid: 0360c07e49ff6984b8b5dc506d051d99, type: 2}
+    options: []
   options:
-  - id: 047b5efd616b40a2bd65d95719539ca2
-    label: Bueno dale
-    outcome: "Ahora s\xED lo vale... \xA1Gracias!"
+  - id: 7737a431248441e0840938dd27fbcb6c
+    label: Me quiero jubilar YA.
+    outcome: Listo, yo me encargo.
     hostility: 0
-    reputation: 5
+    reputation: 0
     happiness: 0
     profit: 0
-    money: -25
+    money: -2000
     moneyPerStall: 0
     salaryIncreasePercent: 0
     destroyBiggestStall: 0
@@ -56,11 +49,11 @@ MonoBehaviour:
     specialWaves: 0
     specialOneDayOnly: 0
     specialPermanent: 0
-  - id: 047b5efd616b40a2bd65d95719539ca2
-    label: "\xBFQu\xE9 descuentito? Tomatel\xE1"
-    outcome: "Qu\xE9 amarrete"
+  - id: 7737a431248441e0840938dd27fbcb6c
+    label: "\xBFQu\xE9 te pens\xE1s que cago la guita?"
+    outcome: "Qu\xE9 pecho fr\xEDo."
     hostility: 0
-    reputation: -10
+    reputation: 0
     happiness: 0
     profit: 0
     money: 0

@@ -10,34 +10,41 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8a4b9b9cde64d984db7782bf255b0d6c, type: 3}
-  m_Name: Ev_Endeudados
+  m_Name: Ev_PuestosTomados
   m_EditorClassIdentifier: Assembly-CSharp::Salada.Game.GameEvent
-  id: 4bcea793a14a4b0c89599d86bf1cbe53
-  title: Endeudados
-  speaker: {fileID: 11400000, guid: ebb13c032a1ec9f45a1f737e7c4eb783, type: 2}
-  description: "Estamos en n\xFAmeros rojos, tenemos que solucionarlo lo antes posible
-    o vamos a quebrar. "
+  id: 2c282f21c4cf4634aaf6e394ccf9d33b
+  title: Puestos tomados
+  speaker: {fileID: 11400000, guid: 00112233445566778899aabbccddeef2, type: 2}
+  description: "parece que tus empleados se cansaron de tu tiran\xEDa"
   mandatory: 1
   repeatable: 0
   conditions:
   - type: 0
-    intValue: 0
+    intValue: 5
     value: 0
     meter: 0
     mode: 0
     events: []
     options: []
-  - type: 2
-    intValue: 0
-    value: 0
-    meter: 0
+  - type: 4
+    intValue: 5
+    value: 15
+    meter: 2
     mode: 0
     events: []
+    options: []
+  - type: 5
+    intValue: 5
+    value: 15
+    meter: 2
+    mode: 1
+    events:
+    - {fileID: 11400000, guid: 80c712de3d119764cb7d6471fc6d5727, type: 2}
     options: []
   options:
-  - id: 7ce7aa456cb84c689fc4fa819c062acd
-    label: Vamos a hacer lo posible
-    outcome: Dale que remontamos.
+  - id: e729e3449418406399d55889acf1f151
+    label: "\xA1Desagradecidos!"
+    outcome: "\xBFY por casa c\xF3mo andamos?"
     hostility: 0
     reputation: 0
     happiness: 0
@@ -46,7 +53,7 @@ MonoBehaviour:
     moneyPerStall: 0
     salaryIncreasePercent: 0
     destroyBiggestStall: 0
-    triggerGameOver: 0
+    triggerGameOver: 1
     triggerGameWin: 0
     special: 0
     specialMagnitude: 0
