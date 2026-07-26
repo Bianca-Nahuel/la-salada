@@ -68,10 +68,10 @@ namespace Salada.UI
 
             AddText(isWin ? "Ganaste!" : "Game Over", 28, accent, FontStyle.Bold, 36);
             AddText(string.IsNullOrEmpty(message) ? defaultMsg : message, 17, new Color(0.9f, 0.9f, 0.92f), FontStyle.Normal, 50);
-            AddButton("Reiniciar", accent, () =>
+            AddButton("Ir al menú principal", accent, () =>
             {
                 Time.timeScale = 1f;
-                SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+                SceneManager.LoadScene("MainMenu");
             });
 
             _root.SetActive(true);
