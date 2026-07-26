@@ -108,8 +108,8 @@ namespace Salada.UI
             Clear();
             AddSpeaker(_ev.speaker);
             AddText(_ev.title, 24, new Color(1f, 0.85f, 0.5f), FontStyle.Bold, 34, TextAnchor.MiddleCenter);
-            AddText(_ev.description, 17, new Color(0.88f, 0.9f, 0.94f), FontStyle.Normal, 60, TextAnchor.UpperLeft);
-
+            var desc = AddText(_ev.description, 17, new Color(0.88f, 0.9f, 0.94f), FontStyle.Normal, 60, TextAnchor.UpperLeft);
+            desc.lineSpacing = 1.5f;
             if (_ev.options != null)
                 for (int i = 0; i < _ev.options.Length; i++)
                 {
